@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("CLIENTE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders    Order[]
+}
+
+model Unit {
+  id        Int      @id @default(autoincrement())
+  name      String
+  address   String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products  Product[]
+  orders    Order[]
+  stock     Stock[]
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  unitId      Int
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  unit        Unit     @relation(fields: [unitId], references: [id])
+  orderItems  OrderItem[]
+  stock       Stock?
+}
+
+model Stock {
+  id          Int      @id @default(autoincrement())
+  productId   Int      @unique
+  quantity    Int      @default(0)
+  unitId      Int
+  updatedAt   DateTime @updatedAt
+
+  product     Product  @relation(fields: [productId], references: [id])
+  unit        Unit     @relation(fields: [unitId], references: [id])
+}
+
+model Order {
+  id              Int          @id @default(autoincrement())
+  userId          Int
+  unitId          Int
+  channel         String
+  total           Float
+  status          String       @default("AGUARDANDO_PAGAMENTO")
+  paymentStatus   String?
+  externalPaymentId String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  user            User         @relation(fields: [userId], references: [id])
+  unit            Unit         @relation(fields: [unitId], references: [id])
+  items           OrderItem[]
+  payments        Payment[]
+}
+
+model OrderItem {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  productId   Int
+  quantity    Int
+  unitPrice   Float
+  total       Float
+
+  order       Order    @relation(fields: [orderId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
+}
+
+model Payment {
+  id              Int      @id @default(autoincrement())
+  orderId         Int
+  amount          Float
+  status          String   @default("PENDENTE")
+  transactionId   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  order           Order    @relation(fields: [orderId], references: [id])
+}

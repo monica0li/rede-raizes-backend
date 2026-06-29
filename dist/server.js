@@ -1,0 +1,83 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
+const dotenv_1 = __importDefault(require("dotenv"));
+const auth_routes_1 = __importDefault(require("./presentation/routes/auth.routes"));
+const unit_routes_1 = __importDefault(require("./presentation/routes/unit.routes"));
+const product_routes_1 = __importDefault(require("./presentation/routes/product.routes"));
+const order_routes_1 = __importDefault(require("./presentation/routes/order.routes"));
+const stock_routes_1 = __importDefault(require("./presentation/routes/stock.routes"));
+const payment_routes_1 = __importDefault(require("./presentation/routes/payment.routes"));
+dotenv_1.default.config();
+const app = (0, express_1.default)();
+const port = process.env.PORT || 3333;
+// Middlewares
+app.use((0, cors_1.default)());
+app.use(express_1.default.json());
+app.use(express_1.default.urlencoded({ extended: true }));
+// Log de requisições
+app.use((req, res, next) => {
+    console.log(`📨 ${req.method} ${req.path}`);
+    next();
+});
+// Rotas
+console.log('📋 Registrando rotas...');
+app.use('/auth', auth_routes_1.default);
+app.use('/units', unit_routes_1.default);
+app.use('/products', product_routes_1.default);
+app.use('/orders', order_routes_1.default);
+app.use('/stock', stock_routes_1.default);
+app.use('/payments', payment_routes_1.default);
+console.log('Rotas registradas!');
+// Rota de saúde
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'OK',
+        message: 'API Raízes do Nordeste está funcionando!',
+        timestamp: new Date().toISOString()
+    });
+});
+// ⚠️ MIDDLEWARE DE ERROS (deve ser o ÚLTIMO)
+// Captura erros de JSON inválido
+app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && 'body' in err) {
+        console.error('JSON Inválido:', err.message);
+        return res.status(400).json({
+            error: 'BAD_REQUEST',
+            message: 'JSON inválido. Verifique a sintaxe do corpo da requisição.',
+            details: [
+                {
+                    field: 'body',
+                    issue: err.message
+                }
+            ],
+            timestamp: new Date().toISOString(),
+            path: req.originalUrl || req.path
+        });
+    }
+    next(err);
+});
+// Captura rotas não encontradas (404)
+app.use((req, res) => {
+    res.status(404).json({
+        error: 'NOT_FOUND',
+        message: `Rota ${req.method} ${req.path} não encontrada`,
+        timestamp: new Date().toISOString(),
+        path: req.originalUrl || req.path
+    });
+});
+app.listen(port, () => {
+    console.log(`🚀 Servidor rodando em http://localhost:${port}`);
+    console.log(`📊 Health check: http://localhost:${port}/health`);
+    console.log(`🔐 Auth: http://localhost:${port}/auth/register e /auth/login`);
+    console.log(`🔐 Auth Admin: http://localhost:${port}/auth/register-admin (ADMIN apenas)`);
+    console.log(`🏢 Units: http://localhost:${port}/units`);
+    console.log(`📦 Products: http://localhost:${port}/products`);
+    console.log(`📋 Orders: http://localhost:${port}/orders`);
+    console.log(`📦 Stock: http://localhost:${port}/stock/add`);
+    console.log(`💳 Payments: http://localhost:${port}/payments/process`);
+});
