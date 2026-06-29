@@ -2,7 +2,6 @@ import { prisma } from '../../config/prisma';
 
 export class LoyaltyService {
   private POINTS_PER_REAL = 1;
-  private POINTS_TO_CASH_RATE = 0.10;
 
   async earnPoints(userId: number, orderId: number, total: number) {
     const points = Math.floor(total * this.POINTS_PER_REAL);
@@ -31,58 +30,6 @@ export class LoyaltyService {
     });
 
     return { loyalty, pointsEarned: points };
-  }
-
-  async redeemPoints(userId: number, pointsToRedeem: number, orderId?: number) {
-    try {
-      const loyalty = await prisma.loyalty.findUnique({
-        where: { userId }
-      });
-
-      if (!loyalty) {
-        throw new Error('Usuario nao possui programa de fidelidade');
-      }
-
-      if (loyalty.points < pointsToRedeem) {
-        throw new Error(`Pontos insuficientes. Voce tem ${loyalty.points} pontos.`);
-      }
-
-      if (pointsToRedeem <= 0) {
-        throw new Error('A quantidade de pontos para resgate deve ser maior que zero');
-      }
-
-      const discount = pointsToRedeem * this.POINTS_TO_CASH_RATE;
-
-      const updated = await prisma.$transaction(async (tx) => {
-        const updatedLoyalty = await tx.loyalty.update({
-          where: { userId },
-          data: {
-            points: { decrement: pointsToRedeem }
-          }
-        });
-
-        await tx.loyaltyTransaction.create({
-          data: {
-            loyaltyId: loyalty.id,
-            type: 'REDEEM',
-            points: pointsToRedeem,
-            description: `Resgate de ${pointsToRedeem} pontos - Desconto de R$ ${discount.toFixed(2)}${orderId ? ` (Pedido #${orderId})` : ''}`,
-            orderId: orderId || null
-          }
-        });
-
-        return updatedLoyalty;
-      });
-
-      return {
-        newBalance: updated.points,
-        pointsRedeemed: pointsToRedeem,
-        discount: Math.round(discount * 100) / 100
-      };
-    } catch (error: any) {
-      console.error('Erro no redeemPoints:', error);
-      throw error;
-    }
   }
 
   async getBalance(userId: number) {
