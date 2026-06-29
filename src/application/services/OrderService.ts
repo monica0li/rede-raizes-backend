@@ -193,7 +193,8 @@ export class OrderService {
       return newOrder;
     });
 
-    return await prisma.order.findUnique({
+    // buscar o pedido completo
+    const orderData = await prisma.order.findUnique({
       where: { id: order.id },
       include: {
         items: {
@@ -208,6 +209,31 @@ export class OrderService {
         }
       }
     });
+
+    // montar resposta com detalhes dos descontos
+    const totalDiscount = Math.round((promotionResult.totalDiscount + pointsDiscount) * 100) / 100;
+
+    const response = {
+      ...orderData,
+      originalSubtotal: Math.round(subtotal * 100) / 100,
+      discountBreakdown: {
+        promotions: promotionResult.appliedPromotions.map(p => ({
+          id: p.id,
+          name: p.name,
+          type: p.type,
+          value: p.value,
+          discountAmount: p.discount
+        })),
+        points: {
+          used: pointsUsed,
+          discountAmount: Math.round(pointsDiscount * 100) / 100
+        },
+        totalDiscount: totalDiscount,
+        finalTotal: finalTotal
+      }
+    };
+
+    return response;
   }
 
   async findOrders(userId?: number, channel?: string, status?: string) {
