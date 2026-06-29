@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
+const swagger_1 = require("./config/swagger");
 const auth_routes_1 = __importDefault(require("./presentation/routes/auth.routes"));
 const unit_routes_1 = __importDefault(require("./presentation/routes/unit.routes"));
 const product_routes_1 = __importDefault(require("./presentation/routes/product.routes"));
@@ -24,11 +26,13 @@ app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 // log de requisições
 app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`);
+    console.log(`📨 ${req.method} ${req.path}`);
     next();
 });
+// swagger UI
+app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_1.swaggerSpec));
 // rotas
-console.log('Registrando rotas...');
+console.log('📋 Registrando rotas...');
 app.use('/auth', auth_routes_1.default);
 app.use('/units', unit_routes_1.default);
 app.use('/products', product_routes_1.default);
@@ -38,7 +42,7 @@ app.use('/payments', payment_routes_1.default);
 app.use('/promotions', promotion_routes_1.default);
 app.use('/loyalty', loyalty_routes_1.default);
 app.use('/audit-logs', audit_routes_1.default);
-console.log('Rotas registradas');
+console.log('Rotas registradas!');
 // rota de saúde
 app.get('/health', (req, res) => {
     res.status(200).json({
@@ -78,14 +82,14 @@ app.use((req, res) => {
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
     console.log(`Health check: http://localhost:${port}/health`);
+    console.log(`Swagger: http://localhost:${port}/api-docs`);
     console.log(`Auth: http://localhost:${port}/auth/register e /auth/login`);
-    console.log(`Auth Admin: http://localhost:${port}/auth/register-admin (ADMIN apenas)`);
     console.log(`Units: http://localhost:${port}/units`);
     console.log(`Products: http://localhost:${port}/products`);
     console.log(`Orders: http://localhost:${port}/orders`);
     console.log(`Stock: http://localhost:${port}/stock/add`);
     console.log(`Payments: http://localhost:${port}/payments/process`);
-    console.log(`Promotions: http://localhost:${port}/promotions/active (público) e /promotions (ADMIN)`);
-    console.log(`Loyalty: http://localhost:${port}/loyalty/balance (JWT)`);
+    console.log(`Promotions: http://localhost:${port}/promotions/active`);
+    console.log(`Loyalty: http://localhost:${port}/loyalty/balance`);
     console.log(`Audit Logs: http://localhost:${port}/audit-logs (ADMIN)`);
 });

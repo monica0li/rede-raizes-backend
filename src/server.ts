@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
 import authRoutes from './presentation/routes/auth.routes';
 import unitRoutes from './presentation/routes/unit.routes';
 import productRoutes from './presentation/routes/product.routes';
@@ -23,12 +25,15 @@ app.use(express.urlencoded({ extended: true }));
 
 // log de requisições
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
+  console.log(`📨 ${req.method} ${req.path}`);
   next();
 });
 
+// swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // rotas
-console.log('Registrando rotas...');
+console.log('📋 Registrando rotas...');
 app.use('/auth', authRoutes);
 app.use('/units', unitRoutes);
 app.use('/products', productRoutes);
@@ -38,7 +43,7 @@ app.use('/payments', paymentRoutes);
 app.use('/promotions', promotionRoutes);
 app.use('/loyalty', loyaltyRoutes);
 app.use('/audit-logs', auditRoutes);
-console.log('Rotas registradas');
+console.log('Rotas registradas!');
 
 // rota de saúde
 app.get('/health', (req, res) => {
@@ -82,14 +87,14 @@ app.use((req, res) => {
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
   console.log(`Health check: http://localhost:${port}/health`);
+  console.log(`Swagger: http://localhost:${port}/api-docs`);
   console.log(`Auth: http://localhost:${port}/auth/register e /auth/login`);
-  console.log(`Auth Admin: http://localhost:${port}/auth/register-admin (ADMIN apenas)`);
   console.log(`Units: http://localhost:${port}/units`);
   console.log(`Products: http://localhost:${port}/products`);
   console.log(`Orders: http://localhost:${port}/orders`);
   console.log(`Stock: http://localhost:${port}/stock/add`);
   console.log(`Payments: http://localhost:${port}/payments/process`);
-  console.log(`Promotions: http://localhost:${port}/promotions/active (público) e /promotions (ADMIN)`);
-  console.log(`Loyalty: http://localhost:${port}/loyalty/balance (JWT)`);
+  console.log(`Promotions: http://localhost:${port}/promotions/active`);
+  console.log(`Loyalty: http://localhost:${port}/loyalty/balance`);
   console.log(`Audit Logs: http://localhost:${port}/audit-logs (ADMIN)`);
 });
