@@ -13,7 +13,6 @@ function auditLog(action, entity) {
             // Registrar após a resposta
             try {
                 const userId = req.user?.id;
-                // Corrigir: garantir que entityId seja number ou undefined
                 let entityId;
                 if (req.params.id) {
                     const parsed = parseInt(req.params.id);
@@ -34,7 +33,6 @@ function auditLog(action, entity) {
                     path: req.path,
                     duration: Date.now() - startTime
                 };
-                // Corrigir: usar o método log com um objeto
                 auditService.log({
                     userId,
                     action,

@@ -7,7 +7,7 @@ class OrderController {
     async create(req, res) {
         try {
             const userId = req.user.id;
-            const { unitId, channel, items } = req.body;
+            const { unitId, channel, items, usePoints } = req.body;
             if (!unitId) {
                 return res.status(422).json({
                     error: 'VALIDATION_ERROR',
@@ -39,7 +39,8 @@ class OrderController {
                 userId,
                 unitId,
                 channel: channel.toUpperCase(),
-                items
+                items,
+                usePoints: usePoints || 0
             };
             const order = await orderService.createOrder(data);
             return res.status(201).json(order);
@@ -102,6 +103,14 @@ class OrderController {
                 });
             }
             if (error.message.includes('está inativo')) {
+                return res.status(409).json({
+                    error: 'CONFLICT',
+                    message: error.message,
+                    timestamp: new Date().toISOString(),
+                    path: req.originalUrl || req.path
+                });
+            }
+            if (error.message.includes('Pontos insuficientes') || error.message.includes('programa de fidelidade')) {
                 return res.status(409).json({
                     error: 'CONFLICT',
                     message: error.message,

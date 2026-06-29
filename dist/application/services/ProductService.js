@@ -23,7 +23,7 @@ class ProductService {
             if (!unit) {
                 throw new Error(`Unidade com ID ${data.unitId} não encontrada`);
             }
-            // erificar se a unidade está ativa
+            // verificar se a unidade está ativa
             if (!unit.active) {
                 throw new Error(`Unidade "${unit.name}" está inativa. Não é possível criar produtos.`);
             }

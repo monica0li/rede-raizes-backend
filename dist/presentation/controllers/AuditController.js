@@ -4,7 +4,6 @@ exports.AuditController = void 0;
 const AuditService_1 = require("../../application/services/AuditService");
 const auditService = new AuditService_1.AuditService();
 class AuditController {
-    // GET /audit-logs - Listar logs (ADMIN)
     async getLogs(req, res) {
         try {
             const page = req.query.page ? parseInt(req.query.page) : 1;
@@ -27,7 +26,6 @@ class AuditController {
             });
         }
     }
-    // GET /audit-logs/order/:orderId - Logs por pedido
     async getLogsByOrder(req, res) {
         try {
             const orderId = parseInt(req.params.orderId);
@@ -52,7 +50,6 @@ class AuditController {
             });
         }
     }
-    // GET /audit-logs/user/:userId - Logs por usuário
     async getLogsByUser(req, res) {
         try {
             const userId = parseInt(req.params.userId);

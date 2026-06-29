@@ -44,6 +44,8 @@ export class LoyaltyController {
       const userId = req.user!.id;
       const { points, orderId } = req.body;
 
+      console.log('Redeem points request:', { userId, points, orderId });
+
       if (!points || points <= 0) {
         return res.status(422).json({
           error: 'VALIDATION_ERROR',
@@ -56,11 +58,15 @@ export class LoyaltyController {
 
       const result = await loyaltyService.redeemPoints(userId, points, orderId);
 
-      // Registrar auditoria
-      await auditService.logLoyaltyRedemption(userId, {
-        pointsRedeemed: points,
-        discount: result.discount,
-        newBalance: result.newBalance
+      await auditService.log({
+        userId,
+        action: 'LOYALTY_REDEMPTION',
+        entity: 'Loyalty',
+        newValue: {
+          pointsRedeemed: points,
+          discount: result.discount,
+          newBalance: result.newBalance
+        }
       });
 
       return res.status(200).json({
@@ -90,7 +96,7 @@ export class LoyaltyController {
 
       return res.status(500).json({
         error: 'INTERNAL_SERVER_ERROR',
-        message: 'Erro ao resgatar pontos',
+        message: error.message || 'Erro ao resgatar pontos',
         timestamp: new Date().toISOString(),
         path: req.originalUrl || req.path
       });

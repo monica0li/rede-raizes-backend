@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PromotionService = void 0;
 const prisma_1 = require("../../config/prisma");
 class PromotionService {
-    // ==================== MÉTODOS PÚBLICOS (API) ====================
     // Aplicar promoções a um pedido
     async applyPromotions(productIds, subtotal, unitId) {
         const now = new Date();
@@ -40,8 +39,7 @@ class PromotionService {
             else if (promo.type === 'FIXO') {
                 discount = Math.min(promo.value, subtotal);
             }
-            // Aplicar desconto (apenas uma promoção por pedido por enquanto)
-            // Se quiser múltiplas promoções, ajuste a lógica
+            // Aplicar desconto
             if (discount > 0) {
                 totalDiscount += discount;
                 appliedPromotions.push({
@@ -60,7 +58,6 @@ class PromotionService {
             finalTotal: Math.round((subtotal - totalDiscount) * 100) / 100
         };
     }
-    // ==================== CRUD (ADMIN) ====================
     async create(data) {
         const { productIds, ...promotionData } = data;
         // Validar datas

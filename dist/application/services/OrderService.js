@@ -10,19 +10,16 @@ class OrderService {
         this.loyaltyService = new LoyaltyService_1.LoyaltyService();
     }
     async createOrder(data) {
-        // 1. Validar canal
         const validChannels = ['APP', 'TOTEM', 'BALCAO', 'PICKUP', 'WEB'];
         if (!validChannels.includes(data.channel.toUpperCase())) {
             throw new Error(`Canal inválido: "${data.channel}". Use: APP, TOTEM, BALCAO, PICKUP ou WEB`);
         }
-        // 2. Validar existência do usuário
         const user = await prisma_1.prisma.user.findUnique({
             where: { id: data.userId }
         });
         if (!user) {
             throw new Error(`Usuário com ID ${data.userId} não encontrado`);
         }
-        // 3. Validar se unidade existe e está ativa
         const unit = await prisma_1.prisma.unit.findUnique({
             where: { id: data.unitId }
         });
@@ -32,7 +29,6 @@ class OrderService {
         if (!unit.active) {
             throw new Error(`Unidade "${unit.name}" está inativa. Não é possível criar pedidos.`);
         }
-        // 4. Buscar produtos e validar estoque
         let subtotal = 0;
         const orderItems = [];
         const productIds = [];
@@ -63,25 +59,40 @@ class OrderService {
             });
             productIds.push(product.id);
         }
-        // 5. Aplicar promoções
         const promotionResult = await this.promotionService.applyPromotions(productIds, subtotal, data.unitId);
-        // 6. Calcular total final (subtotal - desconto)
-        const finalTotal = Math.round((subtotal - promotionResult.totalDiscount) * 100) / 100;
-        // 7. Criar o pedido em transação
+        let finalTotal = Math.round((subtotal - promotionResult.totalDiscount) * 100) / 100;
+        let pointsDiscount = 0;
+        let pointsUsed = 0;
+        if (data.usePoints && data.usePoints > 0) {
+            const loyalty = await prisma_1.prisma.loyalty.findUnique({
+                where: { userId: data.userId }
+            });
+            if (loyalty && loyalty.points >= data.usePoints) {
+                pointsUsed = data.usePoints;
+                pointsDiscount = pointsUsed * 0.10;
+                if (pointsDiscount > finalTotal) {
+                    pointsDiscount = finalTotal;
+                    pointsUsed = Math.floor(pointsDiscount / 0.10);
+                }
+                finalTotal = Math.round((finalTotal - pointsDiscount) * 100) / 100;
+            }
+            else if (loyalty) {
+                throw new Error(`Pontos insuficientes. Você tem ${loyalty.points} pontos.`);
+            }
+            else {
+                throw new Error('Usuário não possui programa de fidelidade.');
+            }
+        }
         const order = await prisma_1.prisma.$transaction(async (tx) => {
-            // 7.1 Criar o pedido
             const newOrder = await tx.order.create({
                 data: {
                     userId: data.userId,
                     unitId: data.unitId,
                     channel: data.channel.toUpperCase(),
                     total: finalTotal,
-                    status: 'AGUARDANDO_PAGAMENTO',
-                    // Armazenar dados da promoção como JSON (opcional)
-                    // promotionApplied: JSON.stringify(promotionResult)
+                    status: 'AGUARDANDO_PAGAMENTO'
                 }
             });
-            // 7.2 Criar os itens do pedido
             for (const item of orderItems) {
                 await tx.orderItem.create({
                     data: {
@@ -92,7 +103,6 @@ class OrderService {
                         total: item.total
                     }
                 });
-                // 7.3 Atualizar estoque
                 await tx.stock.update({
                     where: { productId: item.productId },
                     data: {
@@ -102,19 +112,35 @@ class OrderService {
                     }
                 });
             }
-            // 7.4 Registrar promoções aplicadas (em uma tabela separada, se existir)
-            // Aqui você pode criar registros em uma tabela OrderPromotion se tiver
             if (promotionResult.appliedPromotions.length > 0) {
-                // Exemplo: salvar em um campo JSON ou criar registros
                 console.log(`Promoções aplicadas no pedido ${newOrder.id}:`, promotionResult.appliedPromotions);
+            }
+            if (pointsUsed > 0) {
+                await tx.loyalty.update({
+                    where: { userId: data.userId },
+                    data: {
+                        points: {
+                            decrement: pointsUsed
+                        }
+                    }
+                });
+                const loyalty = await tx.loyalty.findUnique({
+                    where: { userId: data.userId }
+                });
+                if (loyalty) {
+                    await tx.loyaltyTransaction.create({
+                        data: {
+                            loyaltyId: loyalty.id,
+                            type: 'REDEEM',
+                            points: pointsUsed,
+                            description: `Resgate de ${pointsUsed} pontos - Pedido #${newOrder.id}`,
+                            orderId: newOrder.id
+                        }
+                    });
+                }
             }
             return newOrder;
         });
-        // 8. Adicionar pontos de fidelidade (após pedido criado)
-        await this.loyaltyService.earnPoints(data.userId, order.id, finalTotal);
-        // 9. Registrar auditoria (criação de pedido)
-        // O middleware de auditoria já faz isso, mas podemos chamar diretamente se necessário
-        // 10. Buscar pedido completo
         return await prisma_1.prisma.order.findUnique({
             where: { id: order.id },
             include: {
@@ -182,44 +208,17 @@ class OrderService {
         if (!order) {
             throw new Error('Pedido não encontrado');
         }
-        // Cliente só altera os próprios pedidos
         if (userRole !== 'ADMIN' && order.userId !== userId) {
             throw new Error('Você não tem permissão para alterar o status deste pedido');
         }
-        // Pedido cancelado não pode ser alterado
         if (order.status === 'CANCELADO') {
             throw new Error('Pedido já está cancelado. Não é possível alterar o status.');
         }
-        // Pedido entregue não pode ser alterado
         if (order.status === 'ENTREGUE') {
             throw new Error('Pedido já foi entregue. Não é possível alterar o status.');
         }
-        // Regras para não admin
-        if (userRole !== 'ADMIN') {
-            const statusUpper = status.toUpperCase();
-            // Cliente pode CANCELAR (mesmo se pago - permite solicitação)
-            if (statusUpper === 'CANCELADO') {
-                // Cliente pode cancelar em qualquer situação, exceto se já entregue
-                // (a validação de ENTREGUE já foi feita acima)
-                // Permitido!
-            }
-            // Cliente pode confirmar ENTREGA
-            else if (statusUpper === 'ENTREGUE') {
-                if (order.status === 'AGUARDANDO_PAGAMENTO') {
-                    throw new Error('Pedido ainda não foi pago. Não é possível confirmar entrega.');
-                }
-                if (order.status === 'CANCELADO') {
-                    throw new Error('Pedido cancelado não pode ser entregue');
-                }
-                // Permitido!
-            }
-            // Cliente NÃO pode mudar para outros status (PAGO, PREPARANDO, PRONTO)
-            else {
-                throw new Error(`Apenas administradores podem alterar o status para "${statusUpper}"`);
-            }
-        }
-        // Admin pode mudar para qualquer status (desde que não cancelado/entregue)
-        return await prisma_1.prisma.order.update({
+        const shouldCreditPoints = status.toUpperCase() === 'ENTREGUE' && order.status !== 'ENTREGUE';
+        const updatedOrder = await prisma_1.prisma.order.update({
             where: { id },
             data: { status: status.toUpperCase() },
             include: {
@@ -228,26 +227,26 @@ class OrderService {
                 }
             }
         });
+        if (shouldCreditPoints) {
+            await this.loyaltyService.earnPoints(order.userId, order.id, order.total);
+        }
+        return updatedOrder;
     }
     async cancelOrder(id, userId, userRole) {
         const order = await prisma_1.prisma.order.findUnique({ where: { id } });
         if (!order) {
             throw new Error('Pedido não encontrado');
         }
-        // Cliente só pode cancelar seus próprios pedidos
         if (order.userId !== userId && userRole !== 'ADMIN') {
             throw new Error('Você não tem permissão para cancelar este pedido');
         }
-        // Validações que não permitem cancelar
         if (order.status === 'CANCELADO') {
             throw new Error('Pedido já está cancelado');
         }
         if (order.status === 'ENTREGUE') {
             throw new Error('Pedido já entregue não pode ser cancelado');
         }
-        // CLIENTE PODE CANCELAR MESMO SE PAGO (removemos a restrição)
         return await prisma_1.prisma.$transaction(async (tx) => {
-            // Devolver o estoque
             const items = await tx.orderItem.findMany({
                 where: { orderId: id }
             });
@@ -261,7 +260,6 @@ class OrderService {
                     }
                 });
             }
-            // Atualizar status do pedido
             const updatedOrder = await tx.order.update({
                 where: { id },
                 data: { status: 'CANCELADO' },
@@ -271,9 +269,6 @@ class OrderService {
                     }
                 }
             });
-            // MPORTANTE: Devolver pontos de fidelidade se o pedido tiver gerado pontos
-            // Isso deve ser feito aqui se você armazenar os pontos ganhos por pedido
-            // await this.loyaltyService.reversePoints(order.userId, id);
             return updatedOrder;
         });
     }
