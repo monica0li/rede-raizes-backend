@@ -1,0 +1,1469 @@
+{
+  "info": {
+    "_postman_id": "d4799fb2-aaac-4497-a7a1-0c72a10b63df",
+    "name": "Raízes do Nordeste - Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "30742168"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST - Cadastrar Usuário ADMIN",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\":\"MonicaADMIN@teste.com\",\r\n    \"password\":\"Monica@123\",\r\n    \"name\":\"Monica ADMIN\",\r\n    \"role\":\"ADMIN\"\r\n}\r\n// roles: ADMIN, CLIENTE, ATENDENTE, COZINHA",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/auth/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Cadastrar Usuário CLIENTE",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\":\"MonicaCLIENTE@teste.com\",\r\n    \"password\":\"Monica@123\",\r\n    \"name\":\"Monica CLIENTE\",\r\n    \"role\":\"CLIENTE\"\r\n}\r\n// roles: ADMIN, CLIENTE, ATENDENTE, COZINHA",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/auth/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Cadastrar Usuário com role inválida(422)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\":\"MonicaADMIN@teste.com\",\r\n    \"password\":\"Monica@123\",\r\n    \"name\":\"Monica ADMIN\",\r\n    \"role\":\"INVALIDO\"\r\n}\r\n// roles: ADMIN, CLIENTE, ATENDENTE, COZINHA",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/auth/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Cadastrar usuário com email duplicado(409)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\":\"MonicaCLIENTE@teste.com\",\r\n    \"password\":\"Monica@123\",\r\n    \"name\":\"Monica CLIENTE\",\r\n    \"role\":\"CLIENTE\"\r\n}\r\n// roles: ADMIN, CLIENTE, ATENDENTE, COZINHA",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/auth/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"MonicaADMIN@teste.com\",\r\n  \"password\": \"Monica@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Login com credenciais inválidas(401)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"admin@raizes.com\",\r\n  \"password\": \"Admin@12\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Units",
+      "item": [
+        {
+          "name": "POST - Criar unidade",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJNb25pY2FBZG1pbkB0ZXN0ZS5jb20iLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODI2ODM3MTEsImV4cCI6MTc4MzI4ODUxMX0.gTHbB8VlKA2JTta3cV-1kFRcEcdNYuivqJfnINqqBRk",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Raízes do Nordeste - Centro\",\r\n  \"address\": \"Rua das Flores, 123, Centro, São Paulo - SP\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/units",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "units"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Criar unidade sem token(401)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Raízes do Nordeste - Centro\",\r\n  \"address\": \"Rua das Flores, 123, Centro, São Paulo - SP\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/units",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "units"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Criar unidade com body inválido(400)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Raízes do Nordeste - Centro\",\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/units",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "units"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE - Inativar unidade",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJhZG1pbkByYWl6ZXMuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzgyNDMwOTgxLCJleHAiOjE3ODMwMzU3ODF9.XdToqm5u0ftvBRYUg4A4Yki6qTM0YNbsmHnxFyfdU0U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/units/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "units",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Listar todas as unidades ativas",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/units",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "units"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT - Atualizar unidade",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJNb25pY2FBZG1pbkB0ZXN0ZS5jb20iLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODI2ODM3MTEsImV4cCI6MTc4MzI4ODUxMX0.gTHbB8VlKA2JTta3cV-1kFRcEcdNYuivqJfnINqqBRk",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Raízes do Nordeste - Centro - Atualizado\",\r\n  \"address\": \"Rua das Flores, 123, Centro, São Paulo - SP - Atualizado\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/units/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "units",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Reativar unidade",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJhZG1pbkByYWl6ZXMuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzgyNDMwOTgxLCJleHAiOjE3ODMwMzU3ODF9.XdToqm5u0ftvBRYUg4A4Yki6qTM0YNbsmHnxFyfdU0U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/units/1/reactivate",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "units",
+                "1",
+                "reactivate"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "POST - Criar produto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJNb25pY2FBZG1pbkB0ZXN0ZS5jb20iLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODI2ODM3MTEsImV4cCI6MTc4MzI4ODUxMX0.gTHbB8VlKA2JTta3cV-1kFRcEcdNYuivqJfnINqqBRk",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Coxinha\",\r\n  \"price\": 8.50,\r\n  \"description\": \"Deliciosa coxinha de frango\",\r\n  \"unitId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/products",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Criar produto com unidade inválida(404)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJNb25pY2FBZG1pbkB0ZXN0ZS5jb20iLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODI2ODM3MTEsImV4cCI6MTc4MzI4ODUxMX0.gTHbB8VlKA2JTta3cV-1kFRcEcdNYuivqJfnINqqBRk",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Coxinha\",\r\n  \"price\": 8.50,\r\n  \"description\": \"Deliciosa coxinha de frango\",\r\n  \"unitId\": 233\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/products",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Listar produtos",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/products?unitId=",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "unitId",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE - Inativar produto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJNb25pY2FBRE1JTkB0ZXN0ZS5jb20iLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODI2OTU1MTcsImV4cCI6MTc4MzMwMDMxN30.ityjWFHO7hd05OaSM84vOnu3dcr6p9_p5yGyfZV6mB4",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/products/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "products",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Reativar produto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJNb25pY2FBRE1JTkB0ZXN0ZS5jb20iLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODI2OTU1MTcsImV4cCI6MTc4MzMwMDMxN30.ityjWFHO7hd05OaSM84vOnu3dcr6p9_p5yGyfZV6mB4",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/products/1/reactivate",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "products",
+                "1",
+                "reactivate"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Stock",
+      "item": [
+        {
+          "name": "POST - Adicionar estoque",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJhZG1pbkByYWl6ZXMuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzgyNDMwOTgxLCJleHAiOjE3ODMwMzU3ODF9.XdToqm5u0ftvBRYUg4A4Yki6qTM0YNbsmHnxFyfdU0U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"productId\": 2,\r\n  \"unitId\": 1,\r\n  \"quantity\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/stock/add",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "stock",
+                "add"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Adicionar estoque de produto inexistente(404)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJhZG1pbkByYWl6ZXMuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzgyNDMwOTgxLCJleHAiOjE3ODMwMzU3ODF9.XdToqm5u0ftvBRYUg4A4Yki6qTM0YNbsmHnxFyfdU0U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"productId\": 103,\r\n  \"unitId\": 1,\r\n  \"quantity\": 50\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/stock/add",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "stock",
+                "add"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Verificar Estoque do Produto",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJhZG1pbkByYWl6ZXMuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzgyNDMwOTgxLCJleHAiOjE3ODMwMzU3ODF9.XdToqm5u0ftvBRYUg4A4Yki6qTM0YNbsmHnxFyfdU0U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/stock/2",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "stock",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "POST - Criar pedido",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJNb25pY2FDTElFTlRFQHRlc3RlLmNvbSIsInJvbGUiOiJDTElFTlRFIiwiaWF0IjoxNzgyNzcwNzYzLCJleHAiOjE3ODMzNzU1NjN9.h1XPL5wmQET0C62R19q-ZlLVHkbbp7S6BnCONvxvurM",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"unitId\": 1,\r\n  \"channel\": \"APP\",\r\n  \"items\": [\r\n    {\r\n      \"productId\": 1,\r\n      \"quantity\": 1\r\n    }\r\n  ],\r\n  \"usePoints\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/orders",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Criar pedido com canal inválido(422)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJhZG1pbkByYWl6ZXMuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzgyNDMwOTgxLCJleHAiOjE3ODMwMzU3ODF9.XdToqm5u0ftvBRYUg4A4Yki6qTM0YNbsmHnxFyfdU0U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"unitId\": 1,\r\n  \"channel\": \"teste\",\r\n  \"items\": [\r\n    {\r\n      \"productId\": 1,\r\n      \"quantity\": 2\r\n    },\r\n    {\r\n      \"productId\": 2,\r\n      \"quantity\": 1\r\n    }\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/orders",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Criar pedido com quantidade insuficiente(409)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJNb25pY2FDTElFTlRFQHRlc3RlLmNvbSIsInJvbGUiOiJDTElFTlRFIiwiaWF0IjoxNzgyNjg2OTQ0LCJleHAiOjE3ODMyOTE3NDR9.i1XVgYSadKcoDMn_CJc5zxZBPsbNtXsVYM8Pk6cC-TY",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"unitId\": 1,\r\n  \"channel\": \"totem\",\r\n  \"items\": [\r\n    {\r\n      \"productId\": 1,\r\n      \"quantity\": 20000\r\n    },\r\n    {\r\n      \"productId\": 2,\r\n      \"quantity\": 1\r\n    }\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/orders",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Listar todos os pedidos",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJhZG1pbkByYWl6ZXMuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzgyNDMwOTgxLCJleHAiOjE3ODMwMzU3ODF9.XdToqm5u0ftvBRYUg4A4Yki6qTM0YNbsmHnxFyfdU0U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/orders?channel=&status=",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "channel",
+                  "value": ""
+                },
+                {
+                  "key": "status",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Alterar status do pedido",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJNb25pY2FBRE1JTkB0ZXN0ZS5jb20iLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODI3Njk5NjEsImV4cCI6MTc4MzM3NDc2MX0.y2OxAXUSGQ0lEA-aaNO3LuLbAxS-dmwv8mtKhDZjQRw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"status\": \"ENTREGUE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/orders/1/status",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "orders",
+                "1",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Cancelar pedido",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJhZG1pbkByYWl6ZXMuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzgyNDMwOTgxLCJleHAiOjE3ODMwMzU3ODF9.XdToqm5u0ftvBRYUg4A4Yki6qTM0YNbsmHnxFyfdU0U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/orders/1/cancel",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "orders",
+                "1",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payment",
+      "item": [
+        {
+          "name": "POST - Processar pagamento",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJhZG1pbkByYWl6ZXMuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzgyNDMwOTgxLCJleHAiOjE3ODMwMzU3ODF9.XdToqm5u0ftvBRYUg4A4Yki6qTM0YNbsmHnxFyfdU0U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"orderId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/payments/process",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "payments",
+                "process"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Processar pagamento de pedido inválido(404)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJhZG1pbkByYWl6ZXMuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzgyNDMwOTgxLCJleHAiOjE3ODMwMzU3ODF9.XdToqm5u0ftvBRYUg4A4Yki6qTM0YNbsmHnxFyfdU0U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"orderId\": 1010\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/payments/process",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "payments",
+                "process"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST - Consultar status do pagamento",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJhZG1pbkByYWl6ZXMuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzgyNDMwOTgxLCJleHAiOjE3ODMwMzU3ODF9.XdToqm5u0ftvBRYUg4A4Yki6qTM0YNbsmHnxFyfdU0U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/payments/status/8",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "payments",
+                "status",
+                "8"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Promotions",
+      "item": [
+        {
+          "name": "POST - Criar promoção",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJhZG1pbkByYWl6ZXMuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzgyNDMwOTgxLCJleHAiOjE3ODMwMzU3ODF9.XdToqm5u0ftvBRYUg4A4Yki6qTM0YNbsmHnxFyfdU0U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Desconto de 10%\",\r\n  \"description\": \"10% de desconto em pedidos a partir de 50 reais\",\r\n  \"type\": \"PERCENTUAL\",\r\n  \"value\": 10,\r\n  \"minOrderValue\": 50,\r\n  \"startDate\": \"2026-06-28T00:00:00Z\",\r\n  \"endDate\": \"2026-12-31T23:59:59Z\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3333/promotions",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "promotions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Listar promoções ativas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/promotions/active",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "promotions",
+                "active"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Listar todas as promoções",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJhZG1pbkByYWl6ZXMuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzgyNDMwOTgxLCJleHAiOjE3ODMwMzU3ODF9.XdToqm5u0ftvBRYUg4A4Yki6qTM0YNbsmHnxFyfdU0U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/promotions",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "promotions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Listar todas as promoções sem permissão(401)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "http://localhost:3333/promotions/active",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/promotions",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "promotions"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Loyalty",
+      "item": [
+        {
+          "name": "GET - Consultar saldo de pontos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJNb25pY2FDTElFTlRFQHRlc3RlLmNvbSIsInJvbGUiOiJDTElFTlRFIiwiaWF0IjoxNzgyNzcwNzYzLCJleHAiOjE3ODMzNzU1NjN9.h1XPL5wmQET0C62R19q-ZlLVHkbbp7S6BnCONvxvurM",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/loyalty/balance",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "loyalty",
+                "balance"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Consultar histórico de transações",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJNb25pY2FDTElFTlRFQHRlc3RlLmNvbSIsInJvbGUiOiJDTElFTlRFIiwiaWF0IjoxNzgyNzcwNzYzLCJleHAiOjE3ODMzNzU1NjN9.h1XPL5wmQET0C62R19q-ZlLVHkbbp7S6BnCONvxvurM",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/loyalty/history",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "loyalty",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Audit",
+      "item": [
+        {
+          "name": "GET - Listar logs",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJNb25pY2FBRE1JTkB0ZXN0ZS5jb20iLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODI2ODY5NjMsImV4cCI6MTc4MzI5MTc2M30.WLtSb1gy4WoIDPHzShO_bMc7txZcnS0QCHg9qWC_o5I",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/audit-logs",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "audit-logs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Listar logs sem permissão(403)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiZW1haWwiOiJNb25pY2FDTElFTlRFMkB0ZXN0ZS5jb20iLCJyb2xlIjoiQ0xJRU5URSIsImlhdCI6MTc4MjY4ODMwMSwiZXhwIjoxNzgzMjkzMTAxfQ.pFthDdQr3zUCsbD4OjtcVRU0zQ4j8k3gabqFfnxq1Qo",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/audit-logs",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "audit-logs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Listar logs por pedido",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJNb25pY2FBRE1JTkB0ZXN0ZS5jb20iLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODI2ODY5NjMsImV4cCI6MTc4MzI5MTc2M30.WLtSb1gy4WoIDPHzShO_bMc7txZcnS0QCHg9qWC_o5I",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/audit-logs/order/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "audit-logs",
+                "order",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Listar logs por usuário",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJNb25pY2FBRE1JTkB0ZXN0ZS5jb20iLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODI2ODY5NjMsImV4cCI6MTc4MzI5MTc2M30.WLtSb1gy4WoIDPHzShO_bMc7txZcnS0QCHg9qWC_o5I",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/audit-logs/user/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3333",
+              "path": [
+                "audit-logs",
+                "user",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
