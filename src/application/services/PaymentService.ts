@@ -56,7 +56,7 @@ export class PaymentService {
     } else {
       const random = Math.random();
       approved = random < 0.8;
-      console.log(`📊 Resultado aleatório: ${approved ? 'APROVADO ✅' : 'RECUSADO ❌'} (${(random * 100).toFixed(0)}%)`);
+      console.log(`Resultado aleatório: ${approved ? 'APROVADO ✅' : 'RECUSADO ❌'} (${(random * 100).toFixed(0)}%)`);
     }
 
     const paymentStatus = approved ? 'APROVADO' : 'RECUSADO';

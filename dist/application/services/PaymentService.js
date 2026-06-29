@@ -4,7 +4,7 @@ exports.PaymentService = void 0;
 const prisma_1 = require("../../config/prisma");
 class PaymentService {
     async processPayment(orderId, paymentMethod = 'MOCK', forceStatus) {
-        // 1. Buscar o pedido
+        //buscar o pedido
         const order = await prisma_1.prisma.order.findUnique({
             where: { id: orderId },
             include: { items: true }
@@ -21,7 +21,7 @@ class PaymentService {
         if (order.status === 'PAGO') {
             throw new Error('Pedido já foi pago');
         }
-        // 2. Verificar tentativas anteriores
+        //verificar tentativas anteriores
         const previousAttempts = await prisma_1.prisma.payment.findMany({
             where: { orderId },
             orderBy: { createdAt: 'desc' }
@@ -30,11 +30,12 @@ class PaymentService {
         if (lastAttempt && lastAttempt.status === 'APROVADO') {
             throw new Error('Pedido já foi pago');
         }
-        // 3. Simular processamento
+        //simular processamento
         console.log(`⏳ Processando pagamento do pedido ${orderId}...`);
         await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
-        // 4. Determinar o resultado
+        //determinar o resultado
         let approved;
+        //forçar status para teste, se fornecido
         if (forceStatus === 'APROVADO') {
             approved = true;
             console.log('🔒 Forçando APROVAÇÃO (teste)');
@@ -46,14 +47,14 @@ class PaymentService {
         else {
             const random = Math.random();
             approved = random < 0.8;
-            console.log(`📊 Resultado aleatório: ${approved ? 'APROVADO ✅' : 'RECUSADO ❌'} (${(random * 100).toFixed(0)}%)`);
+            console.log(`Resultado aleatório: ${approved ? 'APROVADO ✅' : 'RECUSADO ❌'} (${(random * 100).toFixed(0)}%)`);
         }
         const paymentStatus = approved ? 'APROVADO' : 'RECUSADO';
         const orderStatus = approved ? 'PAGO' : 'AGUARDANDO_PAGAMENTO';
         const transactionId = approved
             ? `mock-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
             : null;
-        // 5. Registrar tentativa de pagamento
+        //registrar tentativa de pagamento
         const payment = await prisma_1.prisma.payment.create({
             data: {
                 orderId: order.id,
@@ -62,7 +63,7 @@ class PaymentService {
                 transactionId: transactionId
             }
         });
-        // 6. Atualizar o pedido
+        //atualizar o pedido
         const updatedOrder = await prisma_1.prisma.order.update({
             where: { id: orderId },
             data: {
@@ -79,7 +80,7 @@ class PaymentService {
                 }
             }
         });
-        console.log(`Pagamento do pedido ${orderId} finalizado!`);
+        console.log(`Pagamento do pedido ${orderId} finalizado`);
         return {
             success: approved,
             payment,

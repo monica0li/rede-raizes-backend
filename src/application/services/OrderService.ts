@@ -1,4 +1,6 @@
 import { prisma } from '../../config/prisma';
+import { PromotionService } from './PromotionService';
+import { LoyaltyService } from './LoyaltyService';
 
 export interface CreateOrderItemDTO {
   productId: number;
@@ -20,14 +22,22 @@ interface OrderItemData {
 }
 
 export class OrderService {
+  private promotionService: PromotionService;
+  private loyaltyService: LoyaltyService;
+
+  constructor() {
+    this.promotionService = new PromotionService();
+    this.loyaltyService = new LoyaltyService();
+  }
+
   async createOrder(data: CreateOrderDTO) {
-    //validar canal
+    // validar canal
     const validChannels = ['APP', 'TOTEM', 'BALCAO', 'PICKUP', 'WEB'];
     if (!validChannels.includes(data.channel.toUpperCase())) {
       throw new Error(`Canal inválido: "${data.channel}". Use: APP, TOTEM, BALCAO, PICKUP ou WEB`);
     }
 
-    //validar exstencia do usuário
+    //validar existência do usuário
     const user = await prisma.user.findUnique({
       where: { id: data.userId }
     });
@@ -50,8 +60,9 @@ export class OrderService {
     }
 
     //buscar produtos e validar estoque
-    let total = 0;
+    let subtotal = 0;
     const orderItems: OrderItemData[] = [];
+    const productIds: number[] = [];
 
     for (const item of data.items) {
       const product = await prisma.product.findUnique({
@@ -76,7 +87,7 @@ export class OrderService {
       }
 
       const itemTotal = product.price * item.quantity;
-      total += itemTotal;
+      subtotal += itemTotal;
 
       orderItems.push({
         productId: product.id,
@@ -84,20 +95,34 @@ export class OrderService {
         unitPrice: product.price,
         total: itemTotal
       });
+
+      productIds.push(product.id);
     }
 
-    //criar o pedido
+    // aplicar promoções
+    const promotionResult = await this.promotionService.applyPromotions(
+      productIds,
+      subtotal,
+      data.unitId
+    );
+
+    //calcular total final (subtotal - desconto)
+    const finalTotal = Math.round((subtotal - promotionResult.totalDiscount) * 100) / 100;
+
+    // criar o pedido em transação
     const order = await prisma.$transaction(async (tx) => {
+      //criar o pedido
       const newOrder = await tx.order.create({
         data: {
           userId: data.userId,
           unitId: data.unitId,
           channel: data.channel.toUpperCase(),
-          total: total,
-          status: 'AGUARDANDO_PAGAMENTO'
+          total: finalTotal,
+          status: 'AGUARDANDO_PAGAMENTO',
         }
       });
 
+      //criar os itens do pedido
       for (const item of orderItems) {
         await tx.orderItem.create({
           data: {
@@ -109,6 +134,7 @@ export class OrderService {
           }
         });
 
+        //atualizar estoque
         await tx.stock.update({
           where: { productId: item.productId },
           data: {
@@ -119,9 +145,18 @@ export class OrderService {
         });
       }
 
+      //registrar promoções aplicadas
+      if (promotionResult.appliedPromotions.length > 0) {
+        console.log(`Promoções aplicadas no pedido ${newOrder.id}:`, promotionResult.appliedPromotions);
+      }
+
       return newOrder;
     });
 
+    //adicionar pontos de fidelidade após pedido criado
+    await this.loyaltyService.earnPoints(data.userId, order.id, finalTotal);
+
+    //buscar pedido completo
     return await prisma.order.findUnique({
       where: { id: order.id },
       include: {
@@ -131,7 +166,10 @@ export class OrderService {
         user: {
           select: { id: true, name: true, email: true }
         },
-        unit: true
+        unit: true,
+        payments: {
+          orderBy: { createdAt: 'desc' }
+        }
       }
     });
   }
@@ -195,26 +233,32 @@ export class OrderService {
       throw new Error('Pedido não encontrado');
     }
 
-    //cliente só altera os próprios pedidos
+    // Cliente só altera os próprios pedidos
     if (userRole !== 'ADMIN' && order.userId !== userId) {
       throw new Error('Você não tem permissão para alterar o status deste pedido');
     }
 
-    //pedido cancelado não pode ser alterado
+    // Pedido cancelado não pode ser alterado
     if (order.status === 'CANCELADO') {
       throw new Error('Pedido já está cancelado. Não é possível alterar o status.');
     }
 
-    //pedido entregue não pode ser alterado
+    // Pedido entregue não pode ser alterado
     if (order.status === 'ENTREGUE') {
       throw new Error('Pedido já foi entregue. Não é possível alterar o status.');
     }
 
-    //regras para não admin
+    // Regras para não admin
     if (userRole !== 'ADMIN') {
       const statusUpper = status.toUpperCase();
 
-      if (statusUpper === 'ENTREGUE') {
+      // Cliente pode CANCELAR (mesmo se pago - permite solicitação)
+      if (statusUpper === 'CANCELADO') {
+        // Cliente pode cancelar em qualquer situação, exceto se já entregue
+
+      }
+      // Cliente pode confirmar ENTREGA
+      else if (statusUpper === 'ENTREGUE') {
         if (order.status === 'AGUARDANDO_PAGAMENTO') {
           throw new Error('Pedido ainda não foi pago. Não é possível confirmar entrega.');
         }
@@ -222,12 +266,13 @@ export class OrderService {
           throw new Error('Pedido cancelado não pode ser entregue');
         }
       }
+      // Cliente NÃO pode mudar para outros status (PAGO, PREPARANDO, PRONTO)
       else {
         throw new Error(`Apenas administradores podem alterar o status para "${statusUpper}"`);
       }
     }
 
-    //admin pode mudar para qualquer status (desde que não cancelado/entregue)
+    // Admin pode mudar para qualquer status (desde que não cancelado/entregue)
     return await prisma.order.update({
       where: { id },
       data: { status: status.toUpperCase() },
@@ -246,12 +291,12 @@ export class OrderService {
       throw new Error('Pedido não encontrado');
     }
 
-    //cliente só pode cancelar seus próprios pedidos
+    // Cliente só pode cancelar seus próprios pedidos
     if (order.userId !== userId && userRole !== 'ADMIN') {
       throw new Error('Você não tem permissão para cancelar este pedido');
     }
 
-    //validações que não permitem cancelar
+    // Validações que não permitem cancelar
     if (order.status === 'CANCELADO') {
       throw new Error('Pedido já está cancelado');
     }
@@ -259,7 +304,10 @@ export class OrderService {
       throw new Error('Pedido já entregue não pode ser cancelado');
     }
 
+    // CLIENTE PODE CANCELAR MESMO SE PAGO
+
     return await prisma.$transaction(async (tx) => {
+      // Devolver o estoque
       const items = await tx.orderItem.findMany({
         where: { orderId: id }
       });
@@ -275,7 +323,8 @@ export class OrderService {
         });
       }
 
-      return await tx.order.update({
+      // Atualizar status do pedido
+      const updatedOrder = await tx.order.update({
         where: { id },
         data: { status: 'CANCELADO' },
         include: {
@@ -284,6 +333,7 @@ export class OrderService {
           }
         }
       });
+      return updatedOrder;
     });
   }
 }

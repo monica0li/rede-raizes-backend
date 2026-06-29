@@ -60,7 +60,7 @@ class UnitService {
             data: updateData
         });
     }
-    // Soft delete (inativar)
+    // soft delete
     async delete(id) {
         const unit = await prisma_1.prisma.unit.findUnique({ where: { id } });
         if (!unit) {
@@ -71,7 +71,7 @@ class UnitService {
             data: { active: false }
         });
     }
-    // Reativar
+    // reativar
     async reactivate(id) {
         const unit = await prisma_1.prisma.unit.findUnique({ where: { id } });
         if (!unit) {

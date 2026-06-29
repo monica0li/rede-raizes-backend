@@ -10,6 +10,7 @@ export class ProductController {
 
       const { name, price, description, unitId } = req.body;
 
+      // Validações
       if (!name || name.trim() === '') {
         return res.status(422).json({
           error: 'VALIDATION_ERROR',
@@ -51,11 +52,21 @@ export class ProductController {
       return res.status(201).json(product);
     } catch (error: any) {
       console.error('ERRO no ProductController.create:', error.message);
-      console.error('Stack:', error.stack);
 
-      if (error.message === 'Produto não encontrado') {
+      //Tratamento para unidade não encontrada
+      if (error.message.includes('Unidade com ID')) {
         return res.status(404).json({
           error: 'NOT_FOUND',
+          message: error.message,
+          timestamp: new Date().toISOString(),
+          path: req.originalUrl || req.path
+        });
+      }
+
+      //Tratamento para unidade inativa
+      if (error.message.includes('está inativa')) {
+        return res.status(409).json({
+          error: 'CONFLICT',
           message: error.message,
           timestamp: new Date().toISOString(),
           path: req.originalUrl || req.path
@@ -71,15 +82,6 @@ export class ProductController {
         });
       }
 
-      if (error.message.includes('Unidade não encontrada')) {
-        return res.status(404).json({
-          error: 'NOT_FOUND',
-          message: error.message,
-          timestamp: new Date().toISOString(),
-          path: req.originalUrl || req.path
-        });
-      }
-
       return res.status(500).json({
         error: 'INTERNAL_SERVER_ERROR',
         message: error.message || 'Erro ao criar produto',
@@ -87,7 +89,7 @@ export class ProductController {
         path: req.originalUrl || req.path
       });
     }
-  }
+  } 
 
   async findAll(req: Request, res: Response) {
     try {

@@ -12,28 +12,34 @@ const product_routes_1 = __importDefault(require("./presentation/routes/product.
 const order_routes_1 = __importDefault(require("./presentation/routes/order.routes"));
 const stock_routes_1 = __importDefault(require("./presentation/routes/stock.routes"));
 const payment_routes_1 = __importDefault(require("./presentation/routes/payment.routes"));
+const promotion_routes_1 = __importDefault(require("./presentation/routes/promotion.routes"));
+const loyalty_routes_1 = __importDefault(require("./presentation/routes/loyalty.routes"));
+const audit_routes_1 = __importDefault(require("./presentation/routes/audit.routes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3333;
-// Middlewares
+// middlewares
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
-// Log de requisições
+// log de requisições
 app.use((req, res, next) => {
-    console.log(`📨 ${req.method} ${req.path}`);
+    console.log(`${req.method} ${req.path}`);
     next();
 });
-// Rotas
-console.log('📋 Registrando rotas...');
+// rotas
+console.log('Registrando rotas...');
 app.use('/auth', auth_routes_1.default);
 app.use('/units', unit_routes_1.default);
 app.use('/products', product_routes_1.default);
 app.use('/orders', order_routes_1.default);
 app.use('/stock', stock_routes_1.default);
 app.use('/payments', payment_routes_1.default);
-console.log('Rotas registradas!');
-// Rota de saúde
+app.use('/promotions', promotion_routes_1.default);
+app.use('/loyalty', loyalty_routes_1.default);
+app.use('/audit-logs', audit_routes_1.default);
+console.log('Rotas registradas');
+// rota de saúde
 app.get('/health', (req, res) => {
     res.status(200).json({
         status: 'OK',
@@ -41,8 +47,7 @@ app.get('/health', (req, res) => {
         timestamp: new Date().toISOString()
     });
 });
-// ⚠️ MIDDLEWARE DE ERROS (deve ser o ÚLTIMO)
-// Captura erros de JSON inválido
+// erros de JSON inválido
 app.use((err, req, res, next) => {
     if (err instanceof SyntaxError && 'body' in err) {
         console.error('JSON Inválido:', err.message);
@@ -61,7 +66,7 @@ app.use((err, req, res, next) => {
     }
     next(err);
 });
-// Captura rotas não encontradas (404)
+// rotas não encontradas (404)
 app.use((req, res) => {
     res.status(404).json({
         error: 'NOT_FOUND',
@@ -71,13 +76,16 @@ app.use((req, res) => {
     });
 });
 app.listen(port, () => {
-    console.log(`🚀 Servidor rodando em http://localhost:${port}`);
-    console.log(`📊 Health check: http://localhost:${port}/health`);
-    console.log(`🔐 Auth: http://localhost:${port}/auth/register e /auth/login`);
-    console.log(`🔐 Auth Admin: http://localhost:${port}/auth/register-admin (ADMIN apenas)`);
-    console.log(`🏢 Units: http://localhost:${port}/units`);
-    console.log(`📦 Products: http://localhost:${port}/products`);
-    console.log(`📋 Orders: http://localhost:${port}/orders`);
-    console.log(`📦 Stock: http://localhost:${port}/stock/add`);
-    console.log(`💳 Payments: http://localhost:${port}/payments/process`);
+    console.log(`Servidor rodando em http://localhost:${port}`);
+    console.log(`Health check: http://localhost:${port}/health`);
+    console.log(`Auth: http://localhost:${port}/auth/register e /auth/login`);
+    console.log(`Auth Admin: http://localhost:${port}/auth/register-admin (ADMIN apenas)`);
+    console.log(`Units: http://localhost:${port}/units`);
+    console.log(`Products: http://localhost:${port}/products`);
+    console.log(`Orders: http://localhost:${port}/orders`);
+    console.log(`Stock: http://localhost:${port}/stock/add`);
+    console.log(`Payments: http://localhost:${port}/payments/process`);
+    console.log(`Promotions: http://localhost:${port}/promotions/active (público) e /promotions (ADMIN)`);
+    console.log(`Loyalty: http://localhost:${port}/loyalty/balance (JWT)`);
+    console.log(`Audit Logs: http://localhost:${port}/audit-logs (ADMIN)`);
 });

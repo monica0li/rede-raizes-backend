@@ -7,6 +7,9 @@ import productRoutes from './presentation/routes/product.routes';
 import orderRoutes from './presentation/routes/order.routes';
 import stockRoutes from './presentation/routes/stock.routes';
 import paymentRoutes from './presentation/routes/payment.routes';
+import promotionRoutes from './presentation/routes/promotion.routes';
+import loyaltyRoutes from './presentation/routes/loyalty.routes';
+import auditRoutes from './presentation/routes/audit.routes';
 
 dotenv.config();
 
@@ -23,7 +26,8 @@ app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
   next();
 });
-//rotas
+
+// rotas
 console.log('Registrando rotas...');
 app.use('/auth', authRoutes);
 app.use('/units', unitRoutes);
@@ -31,7 +35,10 @@ app.use('/products', productRoutes);
 app.use('/orders', orderRoutes);
 app.use('/stock', stockRoutes);
 app.use('/payments', paymentRoutes);
-console.log('Rotas registradas!');
+app.use('/promotions', promotionRoutes);
+app.use('/loyalty', loyaltyRoutes);
+app.use('/audit-logs', auditRoutes);
+console.log('Rotas registradas');
 
 // rota de saúde
 app.get('/health', (req, res) => {
@@ -62,7 +69,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   next(err);
 });
 
-//  rotas não encontradas (404)
+// rotas não encontradas (404)
 app.use((req, res) => {
   res.status(404).json({
     error: 'NOT_FOUND',
@@ -82,4 +89,7 @@ app.listen(port, () => {
   console.log(`Orders: http://localhost:${port}/orders`);
   console.log(`Stock: http://localhost:${port}/stock/add`);
   console.log(`Payments: http://localhost:${port}/payments/process`);
+  console.log(`Promotions: http://localhost:${port}/promotions/active (público) e /promotions (ADMIN)`);
+  console.log(`Loyalty: http://localhost:${port}/loyalty/balance (JWT)`);
+  console.log(`Audit Logs: http://localhost:${port}/audit-logs (ADMIN)`);
 });

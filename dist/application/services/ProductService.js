@@ -5,7 +5,7 @@ const prisma_1 = require("../../config/prisma");
 class ProductService {
     async create(data) {
         try {
-            console.log('📦 ProductService.create recebeu:', data);
+            console.log('ProductService.create recebeu:', data);
             // Validações
             if (!data.name || data.name.trim() === '') {
                 throw new Error('Nome é obrigatório');
@@ -16,12 +16,16 @@ class ProductService {
             if (!data.unitId) {
                 throw new Error('Unidade é obrigatória');
             }
-            // Verificar se a unidade existe e está ativa
+            // erificar se a unidade existe (independente de estar ativa)
             const unit = await prisma_1.prisma.unit.findUnique({
-                where: { id: data.unitId, active: true }
+                where: { id: data.unitId }
             });
             if (!unit) {
-                throw new Error(`Unidade com ID ${data.unitId} não encontrada ou inativa`);
+                throw new Error(`Unidade com ID ${data.unitId} não encontrada`);
+            }
+            // erificar se a unidade está ativa
+            if (!unit.active) {
+                throw new Error(`Unidade "${unit.name}" está inativa. Não é possível criar produtos.`);
             }
             console.log('Unidade encontrada:', unit.id, unit.name);
             // Criar o produto
@@ -129,7 +133,7 @@ class ProductService {
             throw error;
         }
     }
-    // Soft delete (inativar)
+    //soft delete (inativar)
     async delete(id) {
         try {
             const product = await prisma_1.prisma.product.findUnique({ where: { id } });
@@ -150,7 +154,7 @@ class ProductService {
             throw error;
         }
     }
-    // Reativar
+    //reativar
     async reactivate(id) {
         try {
             const product = await prisma_1.prisma.product.findUnique({ where: { id } });

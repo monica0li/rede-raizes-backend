@@ -203,7 +203,6 @@ class OrderController {
         }
         catch (error) {
             console.error('Erro ao atualizar status:', error.message);
-            // Status inválido (422)
             if (error.message.includes('Status inválido')) {
                 return res.status(422).json({
                     error: 'VALIDATION_ERROR',
@@ -218,7 +217,6 @@ class OrderController {
                     path: req.originalUrl || req.path
                 });
             }
-            // 🔒 Sem permissão (403)
             if (error.message.includes('não tem permissão') ||
                 error.message.includes('Apenas administradores')) {
                 return res.status(403).json({
@@ -228,7 +226,6 @@ class OrderController {
                     path: req.originalUrl || req.path
                 });
             }
-            // Pedido não encontrado (404)
             if (error.message === 'Pedido não encontrado') {
                 return res.status(404).json({
                     error: 'NOT_FOUND',
@@ -237,7 +234,6 @@ class OrderController {
                     path: req.originalUrl || req.path
                 });
             }
-            // ⚠️ Conflito de regras de negócio (409)
             if (error.message.includes('já está cancelado') ||
                 error.message.includes('já foi entregue') ||
                 error.message.includes('já pago') ||
@@ -250,7 +246,6 @@ class OrderController {
                     path: req.originalUrl || req.path
                 });
             }
-            // Erro interno (500)
             return res.status(500).json({
                 error: 'INTERNAL_SERVER_ERROR',
                 message: error.message || 'Erro ao atualizar status',
@@ -278,7 +273,6 @@ class OrderController {
         }
         catch (error) {
             console.error('Erro ao cancelar pedido:', error.message);
-            // Pedido não encontrado (404)
             if (error.message === 'Pedido não encontrado') {
                 return res.status(404).json({
                     error: 'NOT_FOUND',
@@ -287,7 +281,6 @@ class OrderController {
                     path: req.originalUrl || req.path
                 });
             }
-            // 🔒 Sem permissão (403)
             if (error.message.includes('permissão') ||
                 error.message.includes('apenas administradores')) {
                 return res.status(403).json({
@@ -297,7 +290,6 @@ class OrderController {
                     path: req.originalUrl || req.path
                 });
             }
-            // ⚠️ Conflito de regras de negócio (409)
             if (error.message.includes('já entregue') ||
                 error.message.includes('já pago') ||
                 error.message.includes('já está cancelado')) {
@@ -308,7 +300,6 @@ class OrderController {
                     path: req.originalUrl || req.path
                 });
             }
-            // Erro interno (500)
             return res.status(500).json({
                 error: 'INTERNAL_SERVER_ERROR',
                 message: error.message || 'Erro ao cancelar pedido',

@@ -7,7 +7,6 @@ class UnitController {
     async create(req, res) {
         try {
             const { name, address } = req.body;
-            // Validações detalhadas
             if (!name || name.trim() === '') {
                 return res.status(422).json({
                     error: 'VALIDATION_ERROR',

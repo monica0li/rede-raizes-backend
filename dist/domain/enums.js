@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentStatus = exports.Channel = exports.OrderStatus = exports.Roles = void 0;
-// Enums para validação no código
 exports.Roles = {
     CLIENTE: 'CLIENTE',
     ADMIN: 'ADMIN'

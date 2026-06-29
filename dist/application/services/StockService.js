@@ -4,7 +4,7 @@ exports.StockService = void 0;
 const prisma_1 = require("../../config/prisma");
 class StockService {
     async addStock(productId, unitId, quantity) {
-        // Verifica se o produto existe
+        //verifica se o produto existe
         const product = await prisma_1.prisma.product.findUnique({
             where: { id: productId },
             include: { stock: true }
@@ -18,7 +18,7 @@ class StockService {
         if (quantity <= 0) {
             throw new Error('A quantidade deve ser maior que zero');
         }
-        // Se já tem estoque, atualiza. Se não, cria.
+        //se já tem estoque, atualiza. Se não, cria.
         if (product.stock) {
             return await prisma_1.prisma.stock.update({
                 where: { productId: productId },
@@ -46,7 +46,7 @@ class StockService {
         });
     }
     async updateStock(productId, quantity, unitId) {
-        // Verifica se o produto existe
+        // verifica se o produto existe
         const product = await prisma_1.prisma.product.findUnique({
             where: { id: productId }
         });
@@ -56,12 +56,12 @@ class StockService {
         if (quantity < 0) {
             throw new Error('A quantidade não pode ser negativa');
         }
-        // Verifica se o estoque existe
+        // verifica se o estoque existe
         const existingStock = await prisma_1.prisma.stock.findUnique({
             where: { productId }
         });
         if (!existingStock) {
-            // Se não existe, cria um novo
+            //se não existe, cria um novo
             return await prisma_1.prisma.stock.create({
                 data: {
                     productId,
@@ -70,7 +70,7 @@ class StockService {
                 }
             });
         }
-        // Atualiza o estoque existente
+        //atualizar estoque
         return await prisma_1.prisma.stock.update({
             where: { productId },
             data: { quantity }

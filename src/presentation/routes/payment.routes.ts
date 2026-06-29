@@ -1,14 +1,12 @@
 import { Router } from 'express';
 import { PaymentController } from '../controllers/PaymentController';
 import { authMiddleware } from '../middlewares/auth';
+import { auditLog } from '../middlewares/audit';
 
 const router = Router();
 const paymentController = new PaymentController();
 
-// POST /payments/process - Processar pagamento (mock)
-router.post('/process', authMiddleware, paymentController.processPayment.bind(paymentController));
-
-// GET /payments/status/:orderId - Consultar status do pagamento
+router.post('/process', authMiddleware, auditLog('PROCESS_PAYMENT', 'Payment'), paymentController.processPayment.bind(paymentController));
 router.get('/status/:orderId', authMiddleware, paymentController.getPaymentStatus.bind(paymentController));
 
 export default router;

@@ -8,7 +8,7 @@ class PaymentController {
     async processPayment(req, res) {
         try {
             const { orderId, paymentMethod, forceStatus } = req.body;
-            console.log(`📨 Solicitação de pagamento para pedido ${orderId}`);
+            console.log(`Solicitação de pagamento para pedido ${orderId}`);
             if (!orderId) {
                 return res.status(422).json({
                     error: 'VALIDATION_ERROR',
@@ -18,7 +18,7 @@ class PaymentController {
                     path: req.path
                 });
             }
-            // Verificar se o pedido existe
+            // verificar se o pedido existe
             const order = await prisma_1.prisma.order.findUnique({
                 where: { id: orderId }
             });
@@ -30,7 +30,7 @@ class PaymentController {
                     path: req.path
                 });
             }
-            // Verificar permissão
+            // verificar permissão
             if (req.user.role !== 'ADMIN' && order.userId !== req.user.id) {
                 return res.status(403).json({
                     error: 'FORBIDDEN',
@@ -39,7 +39,7 @@ class PaymentController {
                     path: req.path
                 });
             }
-            // Verificar se o pedido já foi pago
+            // verificar se o pedido já foi pago
             if (order.status === 'PAGO') {
                 return res.status(409).json({
                     error: 'CONFLICT',
@@ -54,7 +54,7 @@ class PaymentController {
                     path: req.path
                 });
             }
-            // Processar pagamento
+            // processar pagamento
             const result = await paymentService.processPayment(orderId, paymentMethod || 'MOCK', forceStatus);
             return res.status(200).json(result);
         }
@@ -97,7 +97,7 @@ class PaymentController {
                     path: req.path
                 });
             }
-            // Buscar o pedido com seus pagamentos
+            // buscar o pedido com seus pagamentos
             const order = await prisma_1.prisma.order.findUnique({
                 where: { id: orderId },
                 include: {
@@ -117,7 +117,6 @@ class PaymentController {
                     path: req.path
                 });
             }
-            // Verificar permissão
             if (req.user.role !== 'ADMIN' && order.userId !== req.user.id) {
                 return res.status(403).json({
                     error: 'FORBIDDEN',
@@ -126,7 +125,6 @@ class PaymentController {
                     path: req.path
                 });
             }
-            // Retornar organizado
             return res.status(200).json({
                 order: {
                     id: order.id,

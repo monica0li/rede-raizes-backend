@@ -20,7 +20,7 @@ export class ProductService {
     try {
       console.log('ProductService.create recebeu:', data);
 
-      //validações
+      // Validações
       if (!data.name || data.name.trim() === '') {
         throw new Error('Nome é obrigatório');
       }
@@ -33,18 +33,23 @@ export class ProductService {
         throw new Error('Unidade é obrigatória');
       }
 
-      //verificar se a unidade existe e está ativa
+      // erificar se a unidade existe (independente de estar ativa)
       const unit = await prisma.unit.findUnique({
-        where: { id: data.unitId, active: true }
+        where: { id: data.unitId }
       });
 
       if (!unit) {
-        throw new Error(`Unidade com ID ${data.unitId} não encontrada ou inativa`);
+        throw new Error(`Unidade com ID ${data.unitId} não encontrada`);
+      }
+
+      // verificar se a unidade está ativa
+      if (!unit.active) {
+        throw new Error(`Unidade "${unit.name}" está inativa. Não é possível criar produtos.`);
       }
 
       console.log('Unidade encontrada:', unit.id, unit.name);
 
-      //criar o produto
+      // Criar o produto
       const product = await prisma.product.create({
         data: {
           name: data.name.trim(),
@@ -66,7 +71,7 @@ export class ProductService {
       throw error;
     }
   }
-
+  
   async findAll(unitId?: number, includeInactive: boolean = false): Promise<Product[]> {
     try {
       const where: any = {};

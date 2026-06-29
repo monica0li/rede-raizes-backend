@@ -1,54 +1,84 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ProductController = void 0;
-const ProductService_1 = require("../../application/services/ProductService");
-const productService = new ProductService_1.ProductService();
-class ProductController {
-    async create(req, res) {
+exports.PromotionController = void 0;
+const PromotionService_1 = require("../../application/services/PromotionService");
+const AuditService_1 = require("../../application/services/AuditService");
+const promotionService = new PromotionService_1.PromotionService();
+const auditService = new AuditService_1.AuditService();
+class PromotionController {
+    async getActive(req, res) {
         try {
-            console.log('ProductController.create recebeu:', req.body);
-            const { name, price, description, unitId } = req.body;
-            // Validações
-            if (!name || name.trim() === '') {
-                return res.status(422).json({
-                    error: 'VALIDATION_ERROR',
-                    message: 'O campo "name" é obrigatório',
-                    details: [{ field: 'name', issue: 'Campo obrigatório' }],
-                    timestamp: new Date().toISOString(),
-                    path: req.originalUrl || req.path
-                });
-            }
-            if (price === undefined || price === null || isNaN(Number(price)) || Number(price) <= 0) {
-                return res.status(422).json({
-                    error: 'VALIDATION_ERROR',
-                    message: 'O campo "price" é obrigatório e deve ser maior que zero',
-                    details: [{ field: 'price', issue: 'Deve ser maior que zero' }],
-                    timestamp: new Date().toISOString(),
-                    path: req.originalUrl || req.path
-                });
-            }
-            if (!unitId) {
-                return res.status(422).json({
-                    error: 'VALIDATION_ERROR',
-                    message: 'O campo "unitId" é obrigatório',
-                    details: [{ field: 'unitId', issue: 'Campo obrigatório' }],
-                    timestamp: new Date().toISOString(),
-                    path: req.originalUrl || req.path
-                });
-            }
-            const data = {
-                name: name.trim(),
-                price: Number(price),
-                description: description ? description.trim() : undefined,
-                unitId: Number(unitId)
-            };
-            const product = await productService.create(data);
-            return res.status(201).json(product);
+            const promotions = await promotionService.findAll(true);
+            return res.status(200).json(promotions);
         }
         catch (error) {
-            console.error('ERRO no ProductController.create:', error.message);
-            //Tratamento para unidade não encontrada
-            if (error.message.includes('Unidade com ID')) {
+            console.error('Erro ao listar promocoes ativas:', error);
+            return res.status(500).json({
+                error: 'INTERNAL_SERVER_ERROR',
+                message: 'Erro ao listar promocoes ativas',
+                timestamp: new Date().toISOString(),
+                path: req.originalUrl || req.path
+            });
+        }
+    }
+    async create(req, res) {
+        try {
+            const data = req.body;
+            if (!data.name || data.name.trim() === '') {
+                return res.status(422).json({
+                    error: 'VALIDATION_ERROR',
+                    message: 'O campo "name" e obrigatorio',
+                    details: [{ field: 'name', issue: 'Campo obrigatorio' }],
+                    timestamp: new Date().toISOString(),
+                    path: req.originalUrl || req.path
+                });
+            }
+            if (!data.type || !['PERCENTUAL', 'FIXO'].includes(data.type)) {
+                return res.status(422).json({
+                    error: 'VALIDATION_ERROR',
+                    message: 'O campo "type" deve ser PERCENTUAL ou FIXO',
+                    details: [{ field: 'type', issue: 'Tipo invalido' }],
+                    timestamp: new Date().toISOString(),
+                    path: req.originalUrl || req.path
+                });
+            }
+            if (!data.value || data.value <= 0) {
+                return res.status(422).json({
+                    error: 'VALIDATION_ERROR',
+                    message: 'O campo "value" e obrigatorio e deve ser maior que zero',
+                    details: [{ field: 'value', issue: 'Deve ser maior que zero' }],
+                    timestamp: new Date().toISOString(),
+                    path: req.originalUrl || req.path
+                });
+            }
+            if (!data.startDate || !data.endDate) {
+                return res.status(422).json({
+                    error: 'VALIDATION_ERROR',
+                    message: 'Os campos "startDate" e "endDate" sao obrigatorios',
+                    timestamp: new Date().toISOString(),
+                    path: req.originalUrl || req.path
+                });
+            }
+            const promotion = await promotionService.create(data);
+            if (promotion) {
+                await auditService.logPromotionApplication(req.user.id, promotion.id, {
+                    action: 'CREATE',
+                    data: data
+                });
+            }
+            return res.status(201).json(promotion);
+        }
+        catch (error) {
+            console.error('Erro ao criar promocao:', error);
+            if (error.message.includes('data de inicio')) {
+                return res.status(422).json({
+                    error: 'VALIDATION_ERROR',
+                    message: error.message,
+                    timestamp: new Date().toISOString(),
+                    path: req.originalUrl || req.path
+                });
+            }
+            if (error.message.includes('produtos nao encontrados')) {
                 return res.status(404).json({
                     error: 'NOT_FOUND',
                     message: error.message,
@@ -56,26 +86,9 @@ class ProductController {
                     path: req.originalUrl || req.path
                 });
             }
-            //Tratamento para unidade inativa
-            if (error.message.includes('está inativa')) {
-                return res.status(409).json({
-                    error: 'CONFLICT',
-                    message: error.message,
-                    timestamp: new Date().toISOString(),
-                    path: req.originalUrl || req.path
-                });
-            }
-            if (error.message.includes('obrigatório') || error.message.includes('vazio') || error.message.includes('maior que zero')) {
-                return res.status(422).json({
-                    error: 'VALIDATION_ERROR',
-                    message: error.message,
-                    timestamp: new Date().toISOString(),
-                    path: req.originalUrl || req.path
-                });
-            }
             return res.status(500).json({
                 error: 'INTERNAL_SERVER_ERROR',
-                message: error.message || 'Erro ao criar produto',
+                message: 'Erro ao criar promocao',
                 timestamp: new Date().toISOString(),
                 path: req.originalUrl || req.path
             });
@@ -83,16 +96,14 @@ class ProductController {
     }
     async findAll(req, res) {
         try {
-            const unitId = req.query.unitId ? parseInt(req.query.unitId) : undefined;
-            const includeInactive = req.query.includeInactive === 'true';
-            const products = await productService.findAll(unitId, includeInactive);
-            return res.status(200).json(products);
+            const promotions = await promotionService.findAll(false);
+            return res.status(200).json(promotions);
         }
         catch (error) {
-            console.error('Erro ao listar produtos:', error);
+            console.error('Erro ao listar promocoes:', error);
             return res.status(500).json({
                 error: 'INTERNAL_SERVER_ERROR',
-                message: 'Erro ao listar produtos',
+                message: 'Erro ao listar promocoes',
                 timestamp: new Date().toISOString(),
                 path: req.originalUrl || req.path
             });
@@ -104,27 +115,27 @@ class ProductController {
             if (isNaN(id)) {
                 return res.status(422).json({
                     error: 'VALIDATION_ERROR',
-                    message: 'ID inválido',
+                    message: 'ID invalido',
                     timestamp: new Date().toISOString(),
                     path: req.originalUrl || req.path
                 });
             }
-            const product = await productService.findById(id);
-            if (!product) {
+            const promotion = await promotionService.findById(id);
+            if (!promotion) {
                 return res.status(404).json({
                     error: 'NOT_FOUND',
-                    message: `Produto com ID ${id} não encontrado`,
+                    message: `Promocao com ID ${id} nao encontrada`,
                     timestamp: new Date().toISOString(),
                     path: req.originalUrl || req.path
                 });
             }
-            return res.status(200).json(product);
+            return res.status(200).json(promotion);
         }
         catch (error) {
-            console.error('Erro ao buscar produto:', error);
+            console.error('Erro ao buscar promocao:', error);
             return res.status(500).json({
                 error: 'INTERNAL_SERVER_ERROR',
-                message: 'Erro ao buscar produto',
+                message: 'Erro ao buscar promocao',
                 timestamp: new Date().toISOString(),
                 path: req.originalUrl || req.path
             });
@@ -136,47 +147,24 @@ class ProductController {
             if (isNaN(id)) {
                 return res.status(422).json({
                     error: 'VALIDATION_ERROR',
-                    message: 'ID inválido',
+                    message: 'ID invalido',
                     timestamp: new Date().toISOString(),
                     path: req.originalUrl || req.path
                 });
             }
-            const { name, price, description, unitId } = req.body;
-            const data = {};
-            if (name !== undefined) {
-                if (name.trim() === '') {
-                    return res.status(422).json({
-                        error: 'VALIDATION_ERROR',
-                        message: 'Nome não pode estar vazio',
-                        timestamp: new Date().toISOString(),
-                        path: req.originalUrl || req.path
-                    });
-                }
-                data.name = name.trim();
+            const data = req.body;
+            const promotion = await promotionService.update(id, data);
+            if (promotion) {
+                await auditService.logPromotionApplication(req.user.id, promotion.id, {
+                    action: 'UPDATE',
+                    data: data
+                });
             }
-            if (price !== undefined) {
-                if (isNaN(Number(price)) || Number(price) <= 0) {
-                    return res.status(422).json({
-                        error: 'VALIDATION_ERROR',
-                        message: 'Price deve ser maior que zero',
-                        timestamp: new Date().toISOString(),
-                        path: req.originalUrl || req.path
-                    });
-                }
-                data.price = Number(price);
-            }
-            if (description !== undefined) {
-                data.description = description.trim() || null;
-            }
-            if (unitId !== undefined) {
-                data.unitId = Number(unitId);
-            }
-            const product = await productService.update(id, data);
-            return res.status(200).json(product);
+            return res.status(200).json(promotion);
         }
         catch (error) {
-            console.error('Erro ao atualizar produto:', error);
-            if (error.message === 'Produto não encontrado') {
+            console.error('Erro ao atualizar promocao:', error);
+            if (error.message === 'Promocao nao encontrada') {
                 return res.status(404).json({
                     error: 'NOT_FOUND',
                     message: error.message,
@@ -184,7 +172,7 @@ class ProductController {
                     path: req.originalUrl || req.path
                 });
             }
-            if (error.message.includes('obrigatório') || error.message.includes('vazio') || error.message.includes('maior que zero')) {
+            if (error.message.includes('data de inicio')) {
                 return res.status(422).json({
                     error: 'VALIDATION_ERROR',
                     message: error.message,
@@ -194,7 +182,7 @@ class ProductController {
             }
             return res.status(500).json({
                 error: 'INTERNAL_SERVER_ERROR',
-                message: error.message || 'Erro ao atualizar produto',
+                message: 'Erro ao atualizar promocao',
                 timestamp: new Date().toISOString(),
                 path: req.originalUrl || req.path
             });
@@ -206,20 +194,26 @@ class ProductController {
             if (isNaN(id)) {
                 return res.status(422).json({
                     error: 'VALIDATION_ERROR',
-                    message: 'ID inválido',
+                    message: 'ID invalido',
                     timestamp: new Date().toISOString(),
                     path: req.originalUrl || req.path
                 });
             }
-            const product = await productService.delete(id);
+            const promotion = await promotionService.delete(id);
+            if (promotion) {
+                await auditService.logPromotionApplication(req.user.id, promotion.id, {
+                    action: 'DELETE',
+                    data: { active: false }
+                });
+            }
             return res.status(200).json({
-                message: `Produto "${product.name}" inativado com sucesso`,
-                product
+                message: `Promocao "${promotion?.name}" inativada com sucesso`,
+                promotion
             });
         }
         catch (error) {
-            console.error('Erro ao inativar produto:', error);
-            if (error.message === 'Produto não encontrado') {
+            console.error('Erro ao inativar promocao:', error);
+            if (error.message === 'Promocao nao encontrada') {
                 return res.status(404).json({
                     error: 'NOT_FOUND',
                     message: error.message,
@@ -229,7 +223,7 @@ class ProductController {
             }
             return res.status(500).json({
                 error: 'INTERNAL_SERVER_ERROR',
-                message: error.message || 'Erro ao inativar produto',
+                message: 'Erro ao inativar promocao',
                 timestamp: new Date().toISOString(),
                 path: req.originalUrl || req.path
             });
@@ -241,20 +235,26 @@ class ProductController {
             if (isNaN(id)) {
                 return res.status(422).json({
                     error: 'VALIDATION_ERROR',
-                    message: 'ID inválido',
+                    message: 'ID invalido',
                     timestamp: new Date().toISOString(),
                     path: req.originalUrl || req.path
                 });
             }
-            const product = await productService.reactivate(id);
+            const promotion = await promotionService.reactivate(id);
+            if (promotion) {
+                await auditService.logPromotionApplication(req.user.id, promotion.id, {
+                    action: 'REACTIVATE',
+                    data: { active: true }
+                });
+            }
             return res.status(200).json({
-                message: `Produto "${product.name}" reativado com sucesso`,
-                product
+                message: `Promocao "${promotion?.name}" reativada com sucesso`,
+                promotion
             });
         }
         catch (error) {
-            console.error('Erro ao reativar produto:', error);
-            if (error.message === 'Produto não encontrado') {
+            console.error('Erro ao reativar promocao:', error);
+            if (error.message === 'Promocao nao encontrada') {
                 return res.status(404).json({
                     error: 'NOT_FOUND',
                     message: error.message,
@@ -264,11 +264,11 @@ class ProductController {
             }
             return res.status(500).json({
                 error: 'INTERNAL_SERVER_ERROR',
-                message: error.message || 'Erro ao reativar produto',
+                message: 'Erro ao reativar promocao',
                 timestamp: new Date().toISOString(),
                 path: req.originalUrl || req.path
             });
         }
     }
 }
-exports.ProductController = ProductController;
+exports.PromotionController = PromotionController;

@@ -6,9 +6,8 @@ const authService = new AuthService_1.AuthService();
 class AuthController {
     async register(req, res) {
         try {
-            console.log('📥 AuthController.register recebeu:', req.body);
+            console.log('AuthController.register recebeu:', req.body);
             const data = req.body;
-            // Validações básicas
             if (!data.email || !data.password || !data.name) {
                 return res.status(422).json({
                     error: 'VALIDATION_ERROR',
@@ -17,7 +16,6 @@ class AuthController {
                     path: req.originalUrl || req.path
                 });
             }
-            // Validação extra de role (caso o usuário tenha enviado)
             if (data.role) {
                 const roleUpper = data.role.toUpperCase();
                 if (!AuthService_1.VALID_ROLES.includes(roleUpper)) {
