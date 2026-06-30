@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // log de requisições
 app.use((req, res, next) => {
-  console.log(`📨 ${req.method} ${req.path}`);
+  console.log(`${req.method} ${req.path}`);
   next();
 });
 
@@ -33,7 +33,7 @@ app.use((req, res, next) => {
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // rotas
-console.log('📋 Registrando rotas...');
+console.log('Registrando rotas...');
 app.use('/auth', authRoutes);
 app.use('/units', unitRoutes);
 app.use('/products', productRoutes);

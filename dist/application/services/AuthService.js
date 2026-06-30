@@ -8,7 +8,7 @@ exports.VALID_ROLES = ['ADMIN', 'CLIENTE', 'ATENDENTE', 'COZINHA'];
 class AuthService {
     async register(data) {
         try {
-            console.log('🔍 Iniciando cadastro para:', data.email);
+            console.log('Iniciando cadastro para:', data.email);
             const existingUser = await prisma_1.prisma.user.findUnique({
                 where: { email: data.email }
             });

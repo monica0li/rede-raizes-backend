@@ -26,6 +26,17 @@ const options = {
                     scheme: 'bearer',
                     bearerFormat: 'JWT'
                 }
+            },
+            schemas: {
+                ErrorResponse: {
+                    type: 'object',
+                    properties: {
+                        error: { type: 'string' },
+                        message: { type: 'string' },
+                        timestamp: { type: 'string' },
+                        path: { type: 'string' }
+                    }
+                }
             }
         },
         security: [
@@ -34,17 +45,18 @@ const options = {
             }
         ],
         paths: {
-            // 1. HEALTH
+            // ============ HEALTH ============
             '/health': {
                 get: {
-                    summary: 'Verificação de saúde da API',
+                    summary: 'Verificar se a API está no ar',
                     tags: ['Health'],
                     responses: {
-                        200: { description: 'API funcionando' }
+                        200: { description: 'API funcionando' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
-            // 2. AUTH
+            // ============ AUTH ============
             '/auth/register': {
                 post: {
                     summary: 'Cadastrar usuario',
@@ -66,15 +78,17 @@ const options = {
                         }
                     },
                     responses: {
-                        201: { description: 'Usuario criado' },
-                        422: { description: 'Erro de validacao' },
-                        409: { description: 'Email ja cadastrado' }
+                        201: { description: 'Usuario criado com sucesso' },
+                        400: { description: 'Requisicao invalida' },
+                        409: { description: 'Email ja cadastrado' },
+                        422: { description: 'Erro de validacao (ex: role invalida, campos faltando)' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
             '/auth/login': {
                 post: {
-                    summary: 'Login',
+                    summary: 'Login do usuario',
                     tags: ['Auth'],
                     requestBody: {
                         required: true,
@@ -91,24 +105,83 @@ const options = {
                         }
                     },
                     responses: {
-                        200: { description: 'Login realizado' },
-                        401: { description: 'Credenciais invalidas' }
+                        200: { description: 'Login realizado com sucesso' },
+                        400: { description: 'Requisicao invalida' },
+                        401: { description: 'Credenciais invalidas' },
+                        422: { description: 'Campos obrigatorios faltando' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
-            // 3. UNITS
+            // ============ UNITS ============
             '/units': {
                 get: {
                     summary: 'Listar unidades ativas',
                     tags: ['Units'],
                     responses: {
-                        200: { description: 'Lista de unidades' }
+                        200: { description: 'Lista de unidades retornada com sucesso' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 },
                 post: {
-                    summary: 'Criar unidade (ADMIN)',
+                    summary: 'Criar unidade',
                     tags: ['Units'],
                     security: [{ bearerAuth: [] }],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    required: ['name', 'address'],
+                                    properties: {
+                                        name: { type: 'string' },
+                                        address: { type: 'string' }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    responses: {
+                        201: { description: 'Unidade criada com sucesso' },
+                        400: { description: 'Requisicao invalida' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        422: { description: 'Campos obrigatorios faltando' },
+                        500: { description: 'Erro interno do servidor' }
+                    }
+                }
+            },
+            '/units/{id}': {
+                get: {
+                    summary: 'Buscar unidade por ID',
+                    tags: ['Units'],
+                    parameters: [
+                        {
+                            in: 'path',
+                            name: 'id',
+                            required: true,
+                            schema: { type: 'integer' }
+                        }
+                    ],
+                    responses: {
+                        200: { description: 'Unidade encontrada' },
+                        404: { description: 'Unidade nao encontrada' },
+                        500: { description: 'Erro interno do servidor' }
+                    }
+                },
+                put: {
+                    summary: 'Atualizar unidade',
+                    tags: ['Units'],
+                    security: [{ bearerAuth: [] }],
+                    parameters: [
+                        {
+                            in: 'path',
+                            name: 'id',
+                            required: true,
+                            schema: { type: 'integer' }
+                        }
+                    ],
                     requestBody: {
                         required: true,
                         content: {
@@ -124,15 +197,17 @@ const options = {
                         }
                     },
                     responses: {
-                        201: { description: 'Unidade criada' },
+                        200: { description: 'Unidade atualizada' },
+                        400: { description: 'Requisicao invalida' },
                         401: { description: 'Nao autenticado' },
-                        403: { description: 'Sem permissao' }
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        404: { description: 'Unidade nao encontrada' },
+                        422: { description: 'Campos obrigatorios faltando' },
+                        500: { description: 'Erro interno do servidor' }
                     }
-                }
-            },
-            '/units/{id}': {
+                },
                 delete: {
-                    summary: 'Inativar unidade (ADMIN)',
+                    summary: 'Inativar unidade (soft delete)',
                     tags: ['Units'],
                     security: [{ bearerAuth: [] }],
                     parameters: [
@@ -144,14 +219,17 @@ const options = {
                         }
                     ],
                     responses: {
-                        200: { description: 'Unidade inativada' },
-                        404: { description: 'Unidade nao encontrada' }
+                        200: { description: 'Unidade inativada com sucesso' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        404: { description: 'Unidade nao encontrada' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
             '/units/{id}/reactivate': {
                 patch: {
-                    summary: 'Reativar unidade (ADMIN)',
+                    summary: 'Reativar unidade',
                     tags: ['Units'],
                     security: [{ bearerAuth: [] }],
                     parameters: [
@@ -163,12 +241,15 @@ const options = {
                         }
                     ],
                     responses: {
-                        200: { description: 'Unidade reativada' },
-                        404: { description: 'Unidade nao encontrada' }
+                        200: { description: 'Unidade reativada com sucesso' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        404: { description: 'Unidade nao encontrada' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
-            // 4. PRODUCTS
+            // ============ PRODUCTS ============
             '/products': {
                 get: {
                     summary: 'Listar produtos',
@@ -179,16 +260,82 @@ const options = {
                             name: 'unitId',
                             schema: { type: 'integer' },
                             description: 'Filtrar por unidade'
+                        },
+                        {
+                            in: 'query',
+                            name: 'includeInactive',
+                            schema: { type: 'boolean' },
+                            description: 'Incluir produtos inativos'
                         }
                     ],
                     responses: {
-                        200: { description: 'Lista de produtos' }
+                        200: { description: 'Lista de produtos retornada' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 },
                 post: {
-                    summary: 'Criar produto (ADMIN)',
+                    summary: 'Criar produto',
                     tags: ['Products'],
                     security: [{ bearerAuth: [] }],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    required: ['name', 'price', 'unitId'],
+                                    properties: {
+                                        name: { type: 'string' },
+                                        price: { type: 'number' },
+                                        description: { type: 'string' },
+                                        unitId: { type: 'integer' }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    responses: {
+                        201: { description: 'Produto criado com sucesso' },
+                        400: { description: 'Requisicao invalida' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        404: { description: 'Unidade nao encontrada' },
+                        409: { description: 'Unidade inativa' },
+                        422: { description: 'Campos obrigatorios faltando' },
+                        500: { description: 'Erro interno do servidor' }
+                    }
+                }
+            },
+            '/products/{id}': {
+                get: {
+                    summary: 'Buscar produto por ID',
+                    tags: ['Products'],
+                    parameters: [
+                        {
+                            in: 'path',
+                            name: 'id',
+                            required: true,
+                            schema: { type: 'integer' }
+                        }
+                    ],
+                    responses: {
+                        200: { description: 'Produto encontrado' },
+                        404: { description: 'Produto nao encontrado' },
+                        500: { description: 'Erro interno do servidor' }
+                    }
+                },
+                put: {
+                    summary: 'Atualizar produto',
+                    tags: ['Products'],
+                    security: [{ bearerAuth: [] }],
+                    parameters: [
+                        {
+                            in: 'path',
+                            name: 'id',
+                            required: true,
+                            schema: { type: 'integer' }
+                        }
+                    ],
                     requestBody: {
                         required: true,
                         content: {
@@ -206,15 +353,17 @@ const options = {
                         }
                     },
                     responses: {
-                        201: { description: 'Produto criado' },
+                        200: { description: 'Produto atualizado' },
+                        400: { description: 'Requisicao invalida' },
                         401: { description: 'Nao autenticado' },
-                        403: { description: 'Sem permissao' }
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        404: { description: 'Produto nao encontrado' },
+                        422: { description: 'Campos obrigatorios faltando' },
+                        500: { description: 'Erro interno do servidor' }
                     }
-                }
-            },
-            '/products/{id}': {
+                },
                 delete: {
-                    summary: 'Inativar produto (ADMIN)',
+                    summary: 'Inativar produto (soft delete)',
                     tags: ['Products'],
                     security: [{ bearerAuth: [] }],
                     parameters: [
@@ -226,15 +375,18 @@ const options = {
                         }
                     ],
                     responses: {
-                        200: { description: 'Produto inativado' },
-                        404: { description: 'Produto nao encontrado' }
+                        200: { description: 'Produto inativado com sucesso' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        404: { description: 'Produto nao encontrado' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
-            // 5. STOCK
+            // ============ STOCK ============
             '/stock/add': {
                 post: {
-                    summary: 'Adicionar estoque (ADMIN)',
+                    summary: 'Adicionar estoque',
                     tags: ['Stock'],
                     security: [{ bearerAuth: [] }],
                     requestBody: {
@@ -243,6 +395,7 @@ const options = {
                             'application/json': {
                                 schema: {
                                     type: 'object',
+                                    required: ['productId', 'unitId', 'quantity'],
                                     properties: {
                                         productId: { type: 'integer' },
                                         unitId: { type: 'integer' },
@@ -253,14 +406,19 @@ const options = {
                         }
                     },
                     responses: {
-                        200: { description: 'Estoque atualizado' },
-                        404: { description: 'Produto nao encontrado' }
+                        200: { description: 'Estoque atualizado com sucesso' },
+                        400: { description: 'Requisicao invalida' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        404: { description: 'Produto nao encontrado' },
+                        422: { description: 'Campos obrigatorios faltando ou quantidade invalida' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
             '/stock/{productId}': {
                 get: {
-                    summary: 'Consultar estoque',
+                    summary: 'Consultar estoque de um produto',
                     tags: ['Stock'],
                     security: [{ bearerAuth: [] }],
                     parameters: [
@@ -272,34 +430,124 @@ const options = {
                         }
                     ],
                     responses: {
-                        200: { description: 'Dados do estoque' },
-                        404: { description: 'Estoque nao encontrado' }
+                        200: { description: 'Estoque encontrado' },
+                        401: { description: 'Nao autenticado' },
+                        404: { description: 'Estoque nao encontrado' },
+                        500: { description: 'Erro interno do servidor' }
+                    }
+                },
+                put: {
+                    summary: 'Atualizar estoque',
+                    tags: ['Stock'],
+                    security: [{ bearerAuth: [] }],
+                    parameters: [
+                        {
+                            in: 'path',
+                            name: 'productId',
+                            required: true,
+                            schema: { type: 'integer' }
+                        }
+                    ],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    required: ['quantity'],
+                                    properties: {
+                                        quantity: { type: 'integer' },
+                                        unitId: { type: 'integer' }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    responses: {
+                        200: { description: 'Estoque atualizado' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        404: { description: 'Produto nao encontrado' },
+                        422: { description: 'Campos obrigatorios faltando' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
-            // 6. PROMOTIONS
+            // ============ PROMOTIONS ============
             '/promotions/active': {
                 get: {
                     summary: 'Listar promocoes ativas',
                     tags: ['Promotions'],
                     responses: {
-                        200: { description: 'Lista de promocoes ativas' }
+                        200: { description: 'Lista de promocoes ativas retornada' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
             '/promotions': {
                 get: {
-                    summary: 'Listar todas promocoes (ADMIN)',
+                    summary: 'Listar todas as promocoes',
                     tags: ['Promotions'],
                     security: [{ bearerAuth: [] }],
                     responses: {
-                        200: { description: 'Lista de promocoes' }
+                        200: { description: 'Lista de promocoes retornada' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 },
                 post: {
-                    summary: 'Criar promocao (ADMIN)',
+                    summary: 'Criar promocao',
                     tags: ['Promotions'],
                     security: [{ bearerAuth: [] }],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    required: ['name', 'type', 'value', 'startDate', 'endDate'],
+                                    properties: {
+                                        name: { type: 'string' },
+                                        description: { type: 'string' },
+                                        type: { type: 'string', enum: ['PERCENTUAL', 'FIXO'] },
+                                        value: { type: 'number' },
+                                        minOrderValue: { type: 'number' },
+                                        startDate: { type: 'string', format: 'date-time' },
+                                        endDate: { type: 'string', format: 'date-time' },
+                                        productIds: {
+                                            type: 'array',
+                                            items: { type: 'integer' }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    responses: {
+                        201: { description: 'Promocao criada com sucesso' },
+                        400: { description: 'Requisicao invalida' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        404: { description: 'Produto(s) nao encontrado(s)' },
+                        422: { description: 'Campos obrigatorios faltando ou data invalida' },
+                        500: { description: 'Erro interno do servidor' }
+                    }
+                }
+            },
+            '/promotions/{id}': {
+                put: {
+                    summary: 'Atualizar promocao',
+                    tags: ['Promotions'],
+                    security: [{ bearerAuth: [] }],
+                    parameters: [
+                        {
+                            in: 'path',
+                            name: 'id',
+                            required: true,
+                            schema: { type: 'integer' }
+                        }
+                    ],
                     requestBody: {
                         required: true,
                         content: {
@@ -312,19 +560,49 @@ const options = {
                                         type: { type: 'string', enum: ['PERCENTUAL', 'FIXO'] },
                                         value: { type: 'number' },
                                         minOrderValue: { type: 'number' },
-                                        startDate: { type: 'string' },
-                                        endDate: { type: 'string' }
+                                        startDate: { type: 'string', format: 'date-time' },
+                                        endDate: { type: 'string', format: 'date-time' },
+                                        active: { type: 'boolean' },
+                                        productIds: {
+                                            type: 'array',
+                                            items: { type: 'integer' }
+                                        }
                                     }
                                 }
                             }
                         }
                     },
                     responses: {
-                        201: { description: 'Promocao criada' }
+                        200: { description: 'Promocao atualizada' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        404: { description: 'Promocao nao encontrada' },
+                        422: { description: 'Dados invalidos' },
+                        500: { description: 'Erro interno do servidor' }
+                    }
+                },
+                delete: {
+                    summary: 'Inativar promocao (soft delete)',
+                    tags: ['Promotions'],
+                    security: [{ bearerAuth: [] }],
+                    parameters: [
+                        {
+                            in: 'path',
+                            name: 'id',
+                            required: true,
+                            schema: { type: 'integer' }
+                        }
+                    ],
+                    responses: {
+                        200: { description: 'Promocao inativada' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        404: { description: 'Promocao nao encontrada' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
-            // 7. ORDERS
+            // ============ ORDERS ============
             '/orders': {
                 get: {
                     summary: 'Listar pedidos',
@@ -334,18 +612,20 @@ const options = {
                         {
                             in: 'query',
                             name: 'channel',
-                            schema: { type: 'string' },
+                            schema: { type: 'string', enum: ['APP', 'TOTEM', 'BALCAO', 'PICKUP', 'WEB'] },
                             description: 'Filtrar por canal'
                         },
                         {
                             in: 'query',
                             name: 'status',
-                            schema: { type: 'string' },
+                            schema: { type: 'string', enum: ['AGUARDANDO_PAGAMENTO', 'PAGO', 'PREPARANDO', 'PRONTO', 'ENTREGUE', 'CANCELADO'] },
                             description: 'Filtrar por status'
                         }
                     ],
                     responses: {
-                        200: { description: 'Lista de pedidos' }
+                        200: { description: 'Lista de pedidos retornada' },
+                        401: { description: 'Nao autenticado' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 },
                 post: {
@@ -358,6 +638,7 @@ const options = {
                             'application/json': {
                                 schema: {
                                     type: 'object',
+                                    required: ['unitId', 'channel', 'items'],
                                     properties: {
                                         unitId: { type: 'integer' },
                                         channel: { type: 'string', enum: ['APP', 'TOTEM', 'BALCAO', 'PICKUP', 'WEB'] },
@@ -366,6 +647,7 @@ const options = {
                                             type: 'array',
                                             items: {
                                                 type: 'object',
+                                                required: ['productId', 'quantity'],
                                                 properties: {
                                                     productId: { type: 'integer' },
                                                     quantity: { type: 'integer' }
@@ -378,9 +660,35 @@ const options = {
                         }
                     },
                     responses: {
-                        201: { description: 'Pedido criado' },
-                        409: { description: 'Estoque insuficiente' },
-                        422: { description: 'Canal invalido' }
+                        201: { description: 'Pedido criado com sucesso' },
+                        400: { description: 'Requisicao invalida' },
+                        401: { description: 'Nao autenticado' },
+                        404: { description: 'Usuario, unidade ou produto nao encontrado' },
+                        409: { description: 'Estoque insuficiente, unidade inativa ou produto inativo' },
+                        422: { description: 'Canal invalido ou campos obrigatorios faltando' },
+                        500: { description: 'Erro interno do servidor' }
+                    }
+                }
+            },
+            '/orders/{id}': {
+                get: {
+                    summary: 'Buscar pedido por ID',
+                    tags: ['Orders'],
+                    security: [{ bearerAuth: [] }],
+                    parameters: [
+                        {
+                            in: 'path',
+                            name: 'id',
+                            required: true,
+                            schema: { type: 'integer' }
+                        }
+                    ],
+                    responses: {
+                        200: { description: 'Pedido encontrado' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao para ver este pedido' },
+                        404: { description: 'Pedido nao encontrado' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
@@ -403,6 +711,7 @@ const options = {
                             'application/json': {
                                 schema: {
                                     type: 'object',
+                                    required: ['status'],
                                     properties: {
                                         status: { type: 'string', enum: ['AGUARDANDO_PAGAMENTO', 'PAGO', 'PREPARANDO', 'PRONTO', 'ENTREGUE', 'CANCELADO'] }
                                     }
@@ -411,8 +720,14 @@ const options = {
                         }
                     },
                     responses: {
-                        200: { description: 'Status atualizado' },
-                        404: { description: 'Pedido nao encontrado' }
+                        200: { description: 'Status atualizado com sucesso' },
+                        400: { description: 'Requisicao invalida' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao para alterar este pedido' },
+                        404: { description: 'Pedido nao encontrado' },
+                        409: { description: 'Pedido ja cancelado/entregue ou nao pode ser alterado' },
+                        422: { description: 'Status invalido ou campo obrigatorio faltando' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
@@ -430,12 +745,16 @@ const options = {
                         }
                     ],
                     responses: {
-                        200: { description: 'Pedido cancelado' },
-                        404: { description: 'Pedido nao encontrado' }
+                        200: { description: 'Pedido cancelado com sucesso' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao para cancelar este pedido' },
+                        404: { description: 'Pedido nao encontrado' },
+                        409: { description: 'Pedido ja entregue, ja cancelado ou ja pago (para clientes)' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
-            // 8. PAYMENTS
+            // ============ PAYMENTS ============
             '/payments/process': {
                 post: {
                     summary: 'Processar pagamento (mock)',
@@ -447,6 +766,7 @@ const options = {
                             'application/json': {
                                 schema: {
                                     type: 'object',
+                                    required: ['orderId'],
                                     properties: {
                                         orderId: { type: 'integer' },
                                         forceStatus: { type: 'string', enum: ['APROVADO', 'RECUSADO'] }
@@ -456,9 +776,14 @@ const options = {
                         }
                     },
                     responses: {
-                        200: { description: 'Pagamento processado' },
+                        200: { description: 'Pagamento processado com sucesso (aprovado ou recusado)' },
+                        400: { description: 'Requisicao invalida' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao para pagar este pedido' },
                         404: { description: 'Pedido nao encontrado' },
-                        409: { description: 'Pedido ja pago' }
+                        409: { description: 'Pedido cancelado, entregue ou ja pago' },
+                        422: { description: 'Campos obrigatorios faltando' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
@@ -476,19 +801,24 @@ const options = {
                         }
                     ],
                     responses: {
-                        200: { description: 'Status do pagamento' },
-                        404: { description: 'Pedido nao encontrado' }
+                        200: { description: 'Status do pagamento retornado' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao para ver este pedido' },
+                        404: { description: 'Pedido nao encontrado ou pagamento nao encontrado' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
-            // 9. LOYALTY
+            // ============ LOYALTY ============
             '/loyalty/balance': {
                 get: {
                     summary: 'Consultar saldo de pontos',
                     tags: ['Loyalty'],
                     security: [{ bearerAuth: [] }],
                     responses: {
-                        200: { description: 'Saldo de pontos' }
+                        200: { description: 'Saldo de pontos retornado' },
+                        401: { description: 'Nao autenticado' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
@@ -497,38 +827,82 @@ const options = {
                     summary: 'Consultar historico de transacoes',
                     tags: ['Loyalty'],
                     security: [{ bearerAuth: [] }],
+                    parameters: [
+                        {
+                            in: 'query',
+                            name: 'limit',
+                            schema: { type: 'integer' },
+                            description: 'Numero de registros por pagina (padrao: 50)'
+                        }
+                    ],
                     responses: {
-                        200: { description: 'Historico de pontos' }
+                        200: { description: 'Historico de transacoes retornado' },
+                        401: { description: 'Nao autenticado' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
-            // 10. AUDIT
+            // ============ AUDIT ============
             '/audit-logs': {
                 get: {
-                    summary: 'Listar logs de auditoria (ADMIN)',
+                    summary: 'Listar logs de auditoria',
                     tags: ['Audit'],
                     security: [{ bearerAuth: [] }],
                     parameters: [
                         {
                             in: 'query',
                             name: 'page',
-                            schema: { type: 'integer' }
+                            schema: { type: 'integer' },
+                            description: 'Numero da pagina (padrao: 1)'
                         },
                         {
                             in: 'query',
                             name: 'limit',
-                            schema: { type: 'integer' }
+                            schema: { type: 'integer' },
+                            description: 'Registros por pagina (padrao: 20)'
+                        },
+                        {
+                            in: 'query',
+                            name: 'userId',
+                            schema: { type: 'integer' },
+                            description: 'Filtrar por usuario'
+                        },
+                        {
+                            in: 'query',
+                            name: 'action',
+                            schema: { type: 'string' },
+                            description: 'Filtrar por acao'
+                        },
+                        {
+                            in: 'query',
+                            name: 'entity',
+                            schema: { type: 'string' },
+                            description: 'Filtrar por entidade'
+                        },
+                        {
+                            in: 'query',
+                            name: 'startDate',
+                            schema: { type: 'string', format: 'date-time' },
+                            description: 'Data inicial (ISO 8601)'
+                        },
+                        {
+                            in: 'query',
+                            name: 'endDate',
+                            schema: { type: 'string', format: 'date-time' },
+                            description: 'Data final (ISO 8601)'
                         }
                     ],
                     responses: {
-                        200: { description: 'Lista de logs' },
-                        403: { description: 'Sem permissao' }
+                        200: { description: 'Lista de logs retornada' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
             '/audit-logs/order/{orderId}': {
                 get: {
-                    summary: 'Listar logs por pedido (ADMIN)',
+                    summary: 'Listar logs por pedido',
                     tags: ['Audit'],
                     security: [{ bearerAuth: [] }],
                     parameters: [
@@ -540,14 +914,17 @@ const options = {
                         }
                     ],
                     responses: {
-                        200: { description: 'Logs do pedido' },
-                        403: { description: 'Sem permissao' }
+                        200: { description: 'Logs do pedido retornados' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        404: { description: 'Pedido nao encontrado' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             },
             '/audit-logs/user/{userId}': {
                 get: {
-                    summary: 'Listar logs por usuario (ADMIN)',
+                    summary: 'Listar logs por usuario',
                     tags: ['Audit'],
                     security: [{ bearerAuth: [] }],
                     parameters: [
@@ -556,11 +933,20 @@ const options = {
                             name: 'userId',
                             required: true,
                             schema: { type: 'integer' }
+                        },
+                        {
+                            in: 'query',
+                            name: 'limit',
+                            schema: { type: 'integer' },
+                            description: 'Registros por pagina (padrao: 20)'
                         }
                     ],
                     responses: {
-                        200: { description: 'Logs do usuario' },
-                        403: { description: 'Sem permissao' }
+                        200: { description: 'Logs do usuario retornados' },
+                        401: { description: 'Nao autenticado' },
+                        403: { description: 'Sem permissao (apenas ADMIN)' },
+                        404: { description: 'Usuario nao encontrado' },
+                        500: { description: 'Erro interno do servidor' }
                     }
                 }
             }

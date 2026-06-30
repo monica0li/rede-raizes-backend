@@ -26,13 +26,13 @@ app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 // log de requisições
 app.use((req, res, next) => {
-    console.log(`📨 ${req.method} ${req.path}`);
+    console.log(`${req.method} ${req.path}`);
     next();
 });
 // swagger UI
 app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_1.swaggerSpec));
 // rotas
-console.log('📋 Registrando rotas...');
+console.log('Registrando rotas...');
 app.use('/auth', auth_routes_1.default);
 app.use('/units', unit_routes_1.default);
 app.use('/products', product_routes_1.default);

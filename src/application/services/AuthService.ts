@@ -29,7 +29,7 @@ export const VALID_ROLES = ['ADMIN', 'CLIENTE', 'ATENDENTE', 'COZINHA'];
 export class AuthService {
   async register(data: RegisterDTO): Promise<AuthResponse> {
     try {
-      console.log('🔍 Iniciando cadastro para:', data.email);
+      console.log('Iniciando cadastro para:', data.email);
 
       const existingUser = await prisma.user.findUnique({
         where: { email: data.email }
